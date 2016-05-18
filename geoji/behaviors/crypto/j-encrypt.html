@@ -1,0 +1,158 @@
+<script>
+ 
+ 	var CryptoBehaviors = CryptoBehaviors || {};
+ 	CryptoBehaviors.JEncrypt = {
+
+ 		properties: {
+ 			mainObj: {
+ 				type: Object
+ 			},
+ 			encryptedObj: {
+ 				type: Object
+ 			},
+ 			encryptCallback:{
+ 				type: Function
+ 			}
+ 		},
+		attached: function(){
+
+		},
+		encryptMainKey: function(key, data, cipher, i){
+			var self = this;
+
+			if(data.toString()==="true" || data.toString()==="false"){
+				data = data.toString();
+			}
+
+			triplesec.encrypt ({
+
+				data:          new triplesec.Buffer(data),
+				key:           new triplesec.Buffer(cipher),
+				progress_hook: function (obj) { /* ... */ }
+
+			}, function(err, buff) {
+
+				if (! err) {
+						var ciphertext = buff.toString('hex');
+						var keys = Object.keys(self.mainObj);
+						var eKeys = Object.keys(self.encryptedObj);
+
+						self.geojiEncrypted[key] = ciphertext;
+
+						if(keys.length === eKeys.length){
+							console.log("OBJECT SHOULD BE ENCRYPTED");
+						}else{
+							self.encrypt_MainObj(i+1, cipher);
+						}
+					}
+
+			});
+
+		},
+		encryptInnerData: function(key, obj, innerKey, data, cipher, i, j){
+			console.log(innerKey + " " + data + " " + cipher + "  encrypting...");
+			var keys = Object.keys(obj);
+			var self = this;
+
+			if(data.toString()==="true" || data.toString()==="false"){
+				data = data.toString();
+			}
+
+			triplesec.encrypt ({
+
+				data:          new triplesec.Buffer(data),
+				key:           new triplesec.Buffer(cipher),
+				progress_hook: function (obj) { /* ... */ }
+
+			}, function(err, buff) {
+
+				if (! err) {
+						var ciphertext = buff.toString('hex');
+						var keys = Object.keys(obj);
+						var eKeys = Object.keys(self.encryptedObj);
+						var gKeys = Object.keys(self.mainObj);
+						
+
+						if(self.encryptedObj[key]===null || self.encryptedObj[key]===undefined){
+							self.encryptedObj[key] = {};
+						}
+
+						if(innerKey.toString() !== "type" && innerKey.toString() !== "private"){
+
+							self.encryptedObj[key][innerKey] = ciphertext;
+						}else if(innerKey.toString() === "type"){
+
+							self.encryptedObj[key].type = self.mainObj[key].type;
+						}else if(innerKey.toString() === "private"){
+							self.encryptedObj[key].private = self.mainObj[key].private;
+						}
+
+						if(keys.length === j+1){
+
+							self.encrypt_MainObj(i+1, cipher);
+
+						}else if(keys.length > j+1){
+
+							self.encrypt_InnerObj(key, obj, cipher, i, j+1);
+						}
+
+					}
+
+			});
+
+		},
+		encryptInnerObj: function(key, obj, cipher, i, j){
+			console.log("encryptInnerObj");
+			var keys = Object.keys(obj);
+
+			this.encrypt_InnerData(key, obj, keys[j], obj[keys[j]], cipher, i, j);
+
+		},
+		encryptArrayElem: function(key, array, cipher, i, j){
+			self = this;
+			console.log("encrypt_ArrayElem");
+			triplesec.encrypt ({
+
+				data:          new triplesec.Buffer(array[j]),
+				key:           new triplesec.Buffer(cipher),
+				progress_hook: function (obj) { /* ... */ }
+
+			}, function(err, buff) {
+
+				if (! err) {
+						var ciphertext = buff.toString('hex');
+						var eKeys = Object.keys(self.encryptedObj);
+						var gKeys = Object.keys(self.mainObj);
+
+						if(self.encryptedObj[key]===null || self.encryptedObj[key]===undefined){
+							self.encryptedObj[key] = [];
+						}
+
+						self.encryptedObj[key][j] = ciphertext;
+
+						if(j+1 === array.length){
+
+							self.encrypt_MainObj(i+1, cipher);
+
+						}else if(array.length > j+1){
+							self.encrypt_Array(key, array, cipher, i, j+1);
+						}
+
+					}
+
+			});
+		},
+		encryptArray: function(key, array, cipher, i, j){
+			var self = this;
+			console.log("encrypt_Array");
+
+			if(array.constructor === Array){
+				self.encrypt_ArrayElem(key, array, cipher, i, j);
+			}else{
+				console.log("Must be type of array to encrypt.")
+			}
+
+		}
+ 	};
+ 	
+ </script>

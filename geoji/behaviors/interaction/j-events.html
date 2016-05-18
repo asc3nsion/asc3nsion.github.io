@@ -1,0 +1,92 @@
+<script>
+ 	var InteractionBehaviors = InteractionBehaviors || {};
+ 	InteractionBehaviors.JEvents = {
+
+ 		properties: {
+ 			jEvents: {
+ 				type: Object,
+ 				value: {},
+ 				observer: "_jEventHandler",
+ 				notify: true
+ 			},
+ 			jCallbacks: {
+ 				type: Object,
+ 				value: {}
+ 			},
+ 			openEvents: {
+ 				type: Object,
+ 				value: {}
+ 			}
+ 		},
+ 		attached: function(){
+
+ 		},
+ 		addJEvent: function(id, event, callback, params){
+
+ 			var e = document.querySelector("#"+id);
+ 			
+ 			if (params === null || params === undefined){ params = []};
+ 			
+ 			switch(params.length){
+ 				case 0:
+ 					e.addEventListener(event, function() {
+			            callback();
+				    });
+				    break;
+				case 1:
+					e.addEventListener(event, function() {
+			            callback(params[0]);
+				    });
+				    break;
+				case 2:
+					e.addEventListener(event, function() {
+			            callback(params[0], params[1]);
+				    });
+				    break;
+				case 3:
+					e.addEventListener(event, function() {
+			            callback(params[0], params[1], params[2]);
+				    });
+				    break;
+				case 4:
+					e.addEventListener(event, function() {
+			            callback(params[0], params[1], params[2], params[3]);
+				    });
+				    break;
+
+ 			}
+ 			
+ 		},
+ 		fireJMouseEvent: function(id, event){
+ 			var e = document.querySelector("#"+id);
+ 			console.log(id);
+			if(e && document.createEvent) {
+		      var evt = document.createEvent("MouseEvents");
+		      evt.initEvent(event, false, false);
+		      e.dispatchEvent(evt);
+		   }
+ 		},
+ 		addOpenEvent: function(key, val){
+ 			this.openEvents[key] = val;
+ 		},
+ 		removeOpenEvent: function(key){
+ 			delete(this.openEvents[key]);
+ 		},
+ 		_jEventHandler: function(){
+		
+ 			for(id in this.jEvents){
+ 				var e = document.querySelector("#"+id);
+ 				var event = this.jEvents[id];
+ 				e.addEventListener(event, function() {
+ 					if(jCallbacks[id] !== null){
+ 						jCallbacks[id]();
+ 					}
+		        });
+
+ 			}
+ 		}
+
+
+ 	};
+ 	
+ </script>

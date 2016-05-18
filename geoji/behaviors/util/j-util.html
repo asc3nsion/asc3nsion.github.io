@@ -1,0 +1,96 @@
+<script>
+ 	var UtilityBehaviors = UtilityBehaviors || {};
+ 	UtilityBehaviors.JUtil = {
+
+ 		properties: {
+ 			
+ 		},
+ 		attached: function(){
+
+ 		},
+ 		getDate: function(){
+ 			var today = new Date();
+			var dd = today.getDate();
+			var mm = today.getMonth()+1; //January is 0!
+			var yyyy = today.getFullYear();
+
+			if(dd<10) {
+			    dd='0'+dd
+			} 
+
+			if(mm<10) {
+			    mm='0'+mm
+			} 
+
+ 		},
+ 		getRandom: function(min, max){
+ 			return Math.random() * (max - min) + min;
+ 		},
+ 		getRandomInt: function(min, max){
+ 			return Math.floor(Math.random() * (max - min) + min);
+ 		},
+ 		shuffle: function (array) {
+			var currentIndex = array.length, temporaryValue, randomIndex;
+
+			// While there remain elements to shuffle...
+			while (0 !== currentIndex) {
+
+				// Pick a remaining element...
+				randomIndex = Math.floor(Math.random() * currentIndex);
+				currentIndex -= 1;
+
+				// And swap it with the current element.
+				temporaryValue = array[currentIndex];
+				array[currentIndex] = array[randomIndex];
+				array[randomIndex] = temporaryValue;
+			}
+
+			return array;
+		},
+		shuffleString: function (str) {
+			var array = str.split("");
+		    var currentIndex = array.length, temporaryValue, randomIndex;
+
+			// While there remain elements to shuffle...
+			while (0 !== currentIndex) {
+
+				// Pick a remaining element...
+				randomIndex = Math.floor(Math.random() * currentIndex);
+				currentIndex -= 1;
+
+				// And swap it with the current element.
+				temporaryValue = array[currentIndex];
+				array[currentIndex] = array[randomIndex];
+				array[randomIndex] = temporaryValue;
+			}
+
+			var s = array.toString();
+			s = s.replace(/,/g , "");
+			return s;
+		},
+		decimalPlaces: function(num){
+			var match = (''+num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+		  	if (!match) { return 0; }
+		  	return Math.max(
+		       	0,
+		       	// Number of digits right of decimal point.
+		       	(match[1] ? match[1].length : 0)
+		       	// Adjust for scientific notation.
+		       	- (match[2] ? +match[2] : 0));
+		},
+		geoDistance: function(lat1, lon1, lat2, lon2, unit){
+			var radlat1 = Math.PI * lat1/180
+			var radlat2 = Math.PI * lat2/180
+			var theta = lon1-lon2
+			var radtheta = Math.PI * theta/180
+			var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+			dist = Math.acos(dist)
+			dist = dist * 180/Math.PI
+			dist = dist * 60 * 1.1515
+			if (unit=="K") { dist = dist * 1.609344 }
+			if (unit=="N") { dist = dist * 0.8684 }
+			return dist
+		}
+ 	};
+ 	
+ </script>

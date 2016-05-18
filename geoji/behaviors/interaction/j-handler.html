@@ -1,0 +1,112 @@
+<script>
+ 	var InteractionBehaviors = InteractionBehaviors || {};
+ 	InteractionBehaviors.JHandler = {
+
+ 		properties: {
+ 			handler:{
+				type: String,
+				value:""
+			},
+			parameters:{
+				type: Array,
+				value: []
+			},
+			handleDialog: {
+				type: String,
+				value: null
+			},
+			handleElement: {
+				type: String,
+				value: null
+			}
+ 		},
+ 		setParams: function(arr){
+			this.parameters = arr;
+ 		},
+ 		addParam: function(param){
+			console.log("parameter added" + param);
+			this.parameters.push(param);
+		},
+		elemCheck: function(){
+
+			var input = this.input;
+			var id = this.id;
+
+			if(input !== undefined || input !== null || input !== ""){
+
+				var e = document.querySelector("#"+input);
+				return e;
+
+			}else if(id !== undefined || id !== null || id !== ""){
+
+				var e = document.querySelector("#"+id);
+				return e;
+
+			}else{
+
+				console.log("No element input, or id defined to call handler.");
+				return null;
+				
+			}
+
+		},
+		call: function(){
+			var params = this.parameters.length;
+			var elem = this.elemCheck();
+
+			if(elem !== null){
+
+				switch(params){
+					case 0:
+						elem[this.handler]();
+						break;
+					case 1:
+						elem[this.handler](this.parameters[0]);
+						break;
+					case 2:
+						elem[this.handler](this.parameters[0], this.parameters[1]);
+						break;
+					case 3:
+						elem[this.handler](this.parameters[0], this.parameters[1], this.parameters[2]);
+						break;
+					case 4:
+						elem[this.handler](this.parameters[0], this.parameters[1], this.parameters[2], this.parameters[3]);
+						break;
+				}
+
+			}
+
+		},
+		handleDialogToggle: function(){
+
+			if(this.handleDialog !== null && this.handleDialog !== undefined){
+				var dialog = document.querySelector("#"+this.handleDialog);
+				dialog.toggle();
+
+			}else{
+				console.log("no dialog defined.");
+			}
+
+		},
+		handleHideElement: function(){
+
+			console.log("handleElement");
+
+			if(this.handleElement !== null && this.handleElement !== undefined){
+				var elem = document.querySelector("#"+this.handleElement);
+
+				if(elem.hidden){
+					elem.hidden = false;
+				}else{
+					elem.hidden = true;
+				}
+
+			}else{
+				console.log("no dialog defined.");
+			}
+
+		}
+
+ 	};
+ 	
+ </script>

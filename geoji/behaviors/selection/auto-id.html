@@ -1,0 +1,222 @@
+<script>
+ 	var SelectionBehaviors = SelectionBehaviors || {};
+ 	SelectionBehaviors.AutoId = {
+
+ 		properties: {
+ 			setId: {
+ 				type: String,
+ 			},
+ 			hardId: {
+ 				type: Boolean,
+ 				default: true,
+ 				readOnly: true
+ 			},
+			classes:{
+				type: Array,
+				value: []
+			},
+			assignClasses:{
+				type: Array,
+				value: []
+			},
+			elems:{
+				type: Object,
+				value:{},
+				readOnly: false
+			},
+			setCtrl:{
+				type: String,
+				value:"",
+				observer: "ctrlSet",
+				notify: true
+			},
+			ctrls:{
+				type: Object,
+				value:{},
+				readOnly: false
+			},
+			ctrl:{
+				type: String,
+				value: ""
+			},
+			store:{
+				type: String,
+				value: "",
+				observer: "idHandler",
+ 				notify: true
+			}
+ 		},
+ 		created: function(){
+			var uid = this.makeId();
+			var id = this.id;
+			if(id === undefined || id === null || id == ""){
+				this.id = uid;
+				this.hardId = false;
+			}
+		},
+		attached: function(){
+			
+		},
+		getId: function(){
+			return this.id;
+		},
+		getIdHash: function(){
+			return "#"+this.id;
+		},
+		getSelf: function(){
+			var e = document.querySelector("#"+this.id);
+			return e;
+		},
+		getElem: function(id){
+			var e = document.querySelector("#"+id);
+			return e;
+		},
+		getClasses: function(){
+			var str = "";
+			 if(this.classes.length > 0){
+				for (var i = this.classes.length - 1; i >= 0; i--) {
+					str += ' ' + this.classes[i];
+				}
+			}
+			return str;
+		},
+		addClass: function(cl){
+			//console.log("adding class "+ cl);
+			var e = this.getSelf();
+
+			if(e !== null){
+				e.className += ' ' + cl;
+			}	
+		},
+		assignClass: function(elem, cl){
+			//console.log("adding class "+ cl + " to: ");
+			//console.log(elem);
+			if(elem !== null){
+				elem.className += ' ' + cl;
+			}	
+		},
+		setClass: function(cl){
+			var e = this.getSelf();
+
+			if(e !== null){
+				e.className = cl;
+			}		
+		},
+		setClasses: function(){
+			var e = this.getSelf();
+			var classes = this.getClasses();
+
+			if(e !== null){
+				e.className = classes;
+			}			
+		},
+		assignElem: function(){
+			var uid = this.makeId();
+			if(this.elems === undefined){
+				this.elems = {};
+			}
+			this.elems[uid] = "";
+			return uid;
+		},
+		assignCtrl: function(name){
+			//console.log(name);
+			var uid = this.makeId();
+			var ctrlNum = this.id + "_" + uid;
+			//console.log("assigning ctrl " + ctrlNum);
+
+			return this.storeCtrl(name, ctrlNum);
+		},
+		addCtrl: function(id){
+
+			return this.storeCtrl(name, id);
+		},
+		storeCtrl: function(name, num){
+
+			if(name !== undefined){
+				var ctrls = this.ctrls;
+
+				if(ctrls === undefined || ctrls === null || ctrls == ""){
+					this.ctrls = {};
+				}
+				this.ctrls[name] = num;
+			}
+
+			return num;
+		},
+		ctrlSet: function(){
+
+			//console.log(this.name);
+			//console.log(this.ctrl + " " + this.setCtrl);
+			// if(this.setCtrl !== ""){
+			// 	console.log("ctrl has been set to: " + this.setCtrl);
+			// 	var assigned = this.setCtrl.split("_");
+			// 	var parent = this.getElem(assigned[0]);
+			// 	this.id = assigned[1];
+			// 	parent.ctrls[this.ctrl] = this.id;
+			// }
+			
+		},
+		getCtrl: function(key){
+
+			return this.ctrls[key];
+			
+		},
+		getCtrls: function(key){
+
+			return this.ctrls;
+			
+		},
+		getCtrlId: function(key){
+			var sel = this;
+			var ctrls = this.ctrls;
+
+			setTimeout(function(){
+	          	return ctrls[key];
+	        },10);
+			
+		},
+		getCtrlIdHash: function(key){
+			var sel = this;
+			var ctrls = this.ctrls;
+
+			setTimeout(function(){
+	          	return "#"+ctrls[key];
+	        },10);
+			
+		},
+		idHandler: function(){
+			if(this.store !== ""){
+				console.log("jjjjj");
+			}
+			
+			// if(this.store !== ""){
+			// 	this.id = this.store;
+			// 	console.log(this.id);
+			// 	var e = document.querySelector("#"+id);
+			// 	console.log(e);
+			// }
+			
+		},
+		makeId: function(){
+			var uid = (new Date().getTime()).toString(36) + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+			return uid;
+		},
+		generateUid: function(separator){
+			/// <summary>
+		    ///    Creates a unique id for identification purposes.
+		    /// </summary>
+		    /// <param name="separator" type="String" optional="true">
+		    /// The optional separator for grouping the generated segmants: default "-".    
+		    /// </param>
+
+		    var delim = separator || "-";
+
+		    function S4() {
+		        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+		    }
+
+		    return (S4() + S4() + delim + S4() + delim + S4() + delim + S4() + delim + S4() + S4() + S4());
+		}
+ 	};
+ 	
+ </script>
