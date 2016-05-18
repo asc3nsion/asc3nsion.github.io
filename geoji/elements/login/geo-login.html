@@ -1,0 +1,373 @@
+<!-- 
+This is an element button for google auth using firebase api
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-auth.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-document.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-collection.html">
+<link rel="import" href="login-btn.html">
+
+<dom-module id= "geo-login">
+  <template >
+  <style include="shared-styles iron-flex iron-flex-alignment">
+      .center-horiz {
+        @apply(--layout-horizontal);
+        @apply(--layout-center-justified);
+      }
+      .center-vert{
+        @apply(--layout-vertical);
+        @apply(--layout-center);
+      }
+      .half{
+        width:40vw;
+      }
+      li.center-horiz{
+        transform: translate(-5%, -0%);
+      }
+      input{
+        width: 50%;
+        padding: 1%;
+        margin: 0.5vw;
+      }
+      div.container{
+        padding-top:10%;
+        width:100%;
+      }
+      paper-material.box {
+        background-color: #E9E1E3;
+        color:--primary-text-color;
+        font-size: 1.3vw;
+        border-radius: 8px;
+      }
+
+  </style>
+
+    <iron-ajax auto url="config.json" handle-as="json" last-response="{{config}}"></iron-ajax>
+
+     <firebase-auth id="firebaseLogin" user="{{user}}" status-known="{{statusKnown}}" location="https://geoji.firebaseio.com" provider="{{provider}}" on-error="errorHandler" on-user-created="userSuccessHandler" on-password-changed="userSuccessHandler" on-password-reset="userSuccessHandler" on-user-removed="userSuccessHandler"></firebase-auth>
+     
+     <firebase-document
+      id= "firebaseUserData"
+      location="{{userURL}}"
+      data="{{userData}}"
+      ></firebase-document>
+
+    <div class="container center-horiz center-vert">
+
+      <paper-material class="half box">
+        <paper-tabs selected="0" on-iron-select="tabHandler">
+          <paper-tab><iron-icon icon="social:public"></iron-icon></paper-tab>
+          <paper-tab><iron-icon icon="social:person"></iron-icon></paper-tab>
+          <paper-tab><iron-icon icon="social:person-add"></iron-icon></paper-tab>
+        </paper-tabs>
+        <iron-pages selected="0">
+            <div>
+            
+             <ul>
+                  <li class="center-horiz">
+
+                    <login-btn
+                      styles= "{{btnStyle}}"
+                      input="{{getId()}}"
+                      handler="login"
+                      provider="google"
+                      social="true"
+                      icon="googleplus"
+                      icon_color="#FFFFFF"
+                      ></login-btn>
+                    <login-btn 
+                      input="{{getId()}}"
+                      handler="logout"
+                      provider="twitter"
+                      social="true"
+                      icon="twitter"
+                      icon_color="#FFFFFF"
+                      ></login-btn>
+                      <login-btn 
+                      input="{{getId()}}"
+                      handler="login"
+                      provider="facebook"
+                      social="true"
+                      icon="facebook"
+                      icon_color="#FFFFFF"
+                      ></login-btn>  
+                  </li>
+                </ul>
+            </div>
+            <div>
+                <ul>
+                  <li class="center-horiz">
+                    <input placeholder="email" value="{{email::input}}">></input>
+                  </li>
+                  <li class="center-horiz">
+                    <input type="password" placeholder="password" value="{{password::input}}"></input>
+                  </li>
+                  <li class="center-horiz">
+                    <login-btn 
+                      styles="{{btnStyles}}"
+                      input="{{getId()}}"
+                      handler="login"
+                      provider="password"
+                      basic="true"
+                      ></login-btn>
+                  </li>
+                </ul>
+            </div>
+            <div>
+                <ul>
+                  <li class="center-horiz">
+                    <input placeholder="email"></input>
+                  </li>
+                  <li class="center-horiz">
+                    <input type="password" placeholder="password"></input>
+                  </li>
+                  <li class="center-horiz">
+                    <input type="password" placeholder="confirm pw"></input>
+                  </li>
+                  <li class="center-horiz">
+                    <login-btn 
+                      styles="{{btnStyles}}"
+                      input="{{getId()}}"
+                      handler="btnHandler"
+                      provider="REGISTER"
+                      basic="true"
+                      ></login-btn>
+                  </li>
+                </ul>
+            </div>
+        </iron-pages>
+      </paper-material>
+      <div>
+        {{userData}}
+      </div>
+    </div>
+    
+  </template>
+</dom-module>
+
+<script>
+addEventListener('WebComponentsReady', function() {
+  Polymer({
+    is: "geo-login",
+    properties: {
+      loggedIn: {
+        type:Boolean,
+        value: false
+      },
+      userURL: {
+        type: String,
+        computed: '_userURL(user)'
+      },
+      provider: {
+        type: String,
+        value: ""
+      },
+      message:{
+        type: String,
+        value: ""
+      },
+      email:{
+        type: String,
+        value: ""
+      },
+      password:{
+        type: String,
+        value: ""
+      },
+      user:{
+        type: Object,
+        value: null,
+        observer: "authCallBack",
+        notify: true
+      },
+      userData:{
+        type: Object,
+        observer: "dataCallBack",
+        notify: true
+      },
+      statusKnown:{
+        type: Boolean
+      },
+      btnStyle: {
+        type: Object,
+        value:{
+          "color": "white"
+        }
+      }
+    },
+    behaviors: [SelectionBehaviors.AutoId],
+    attached: function(){
+
+    },
+    put: function(key, data) {
+      var obj = {};
+      obj[key] = data;
+      this.users = obj;
+      return "Putting data " + data + " in " + key;
+    },
+    _userURL: function(user){
+        if(!user){
+          return null;
+        }else{
+          return "https://geoji.firebaseio.com/users/" + this.user.uid + "/";
+        }
+        
+    },
+    login: function(provider){
+      var params;
+      this.provider = provider;
+
+      switch(provider){
+        case "password":
+          console.log("do a user login.");
+          params = params || {};
+          params.email = this.email;
+          params.password = this.password;
+          this.$.firebaseLogin.login(params);
+          console.log(this.$.firebaseLogin.user);
+          break;
+        case "google":
+          console.log("do a google log in.");
+          params = params || {};
+          params.scope = "email https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload";
+
+          this.$.firebaseLogin.login(params);
+
+          break;
+        case "twitter":
+          console.log("do a twitter log in.");
+          break;
+        case "facebook":
+          console.log("do a facebook log in.");
+          break;
+      }
+
+    },
+    authCallBack: function(){
+      var data = {};
+      data.test = "test";
+      if(this.user !== null){
+          this.userData = this.providerData();
+
+      }
+    },
+    dataCallBack: function(){
+      var feed = app.element("feedList");
+      if(this.userData !== null){
+        if(this.userData.customName !== undefined){
+          app.data.userName = this.userData.customName;
+        }else{
+          app.data.userName = this.userData.name;
+        }
+        if(this.userData.customProfileImg !== undefined){
+          app.data.profileImg = this.userData.customProfileImg;
+        }else{
+          app.data.profileImg = this.userData.profileImg;
+        }
+        app.data.uid = this.user.auth.uid;
+        app.data.email = this.userData.email;
+        app.element("profilePic").setURL(app.data.profileImg);
+        //force feed loads at login
+
+          var feedSection = app.element("mainFeed");
+          var feed = app.element("geoFeed");
+          var mineSection = app.element("mainCollection");
+          var mine = app.element("geoMine");
+          if(feed!==null&&feed!==undefined){
+            feed.publicURL = "https://geoji.firebaseio.com/public/";
+            feed.privateURL = "https://geoji.firebaseio.com/private/";
+            feed.mineURL = "https://geoji.firebaseio.com/mine/"+app.data.uid;
+            feed.feedURL = "https://geoji.firebaseio.com/feed/"+app.data.uid;
+          }
+          if(mine!==null&&mine!==undefined){
+            mine.mineURL = "https://geoji.firebaseio.com/mine/"+app.data.uid;
+          }
+    
+        app.launch();
+      }
+    },
+    getLoggedIn : function(){
+      return this.loggedIn;
+    },
+    providerData: function(){
+      data = {};
+      if (this.provider === "password"){
+        data.name = "unknown";
+        data.email = this.user.password.email;
+        data.profileImg = this.$.firebasLogin.user.password.profileImageURL;
+      }else if (this.provider === "google"){
+        data.name = this.$.firebaseLogin.user.google.displayName;
+        data.email = this.$.firebaseLogin.user.google.email;
+        data.profileImg = this.$.firebaseLogin.user.google.profileImageURL;
+      }
+      return data;
+    },
+    logout: function() {
+      this.$.firebaseLogin.logout();
+    },
+    errorHandler: function(e) {
+      this.message = 'Error: ' + e.detail.message;
+    },
+    userExistsHandler: function(e) {
+      this.message = e.type + ' success!';
+    },
+    userSuccessHandler: function(e) {
+      this.message = e.type + ' success!';
+    },
+    createUserHandler: function(e) {
+      if(this.provider === "password"){
+        this.$.firebaseLogin.createUser(this.email, this.password);
+      }else if (this.provider === "google"){
+        //this.$.firebaseUsers.add
+      }
+      
+    },
+    changePasswordHandler: function(e) {
+      this.$.firebaseLogin.changePassword(this.email, this.password, this.newPassword);
+    },
+    resetPasswordHandler: function(e) {
+      this.$.firebaseLogin.sendPasswordResetEmail(this.email);
+    },
+    removeUserHandler: function(e) {
+      this.$.firebaseLogin.removeUser(this.email, this.password);
+    },
+    computePasswordHidden: function(provider) {
+      return provider !== 'password';
+    },
+    computeCreateUserDisabled: function(email, password) {
+      return !email || !password;
+    },
+    computeChangePasswordDisabled: function(email, password, newPassword) {
+      return !email || !password || !newPassword;
+    },
+    computeResetPasswordDisabled: function(email, password) {
+      return !email || !password;
+    },
+    computeRemoveUserDisabled: function(email, password) {
+      return !email || !password;
+    },
+    computeLoginHidden: function(statusKnown, user) {
+      return !statusKnown || !!user;
+    },
+    computeLogoutHidden: function(statusKnown, user) {
+      return !statusKnown || !user;
+    },
+    computeLoginStatus: function(statusKnown, user) {
+      if (statusKnown && user) {
+        return 'Logged in';
+      }
+      if (statusKnown) {
+        return 'Logged out';
+      }
+      return 'Unknown (checking status...)';
+    },
+    tabHandler: function() {
+      var pages = document.querySelector('iron-pages');
+      var tabs = document.querySelector('paper-tabs');
+      pages.selected = tabs.selected;
+    }
+  });
+});
+  
+</script>

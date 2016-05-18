@@ -1,0 +1,2048 @@
+<!-- 
+This is an element button used as a base for other buttons.
+ text = The text to be displayed on the button
+ icon = The icon to be desplayed on the button
+ iput = This is the id of the component the button will call a method on.
+
+ style of the button is set via j-styles behavior.
+ interaction is set via j-handler.
+ if the button doesn't have an explicit id, one is assigned via auto-id.
+-->
+<!-- components: -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<!-- behaviors: -->
+<link rel="import" href="../../behaviors/style/j-styles.html">
+<link rel="import" href="../../behaviors/interaction/j-handler.html">
+<link rel="import" href="../../behaviors/interaction/j-events.html">
+<link rel="import" href="../../behaviors/selection/auto-id.html">
+<link rel="import" href="../../behaviors/crypto/j-encrypt.html">
+<link rel="import" href="../../behaviors/crypto/j-decrypt.html">
+<link rel="import" href="../../behaviors/util/j-util.html">
+
+<style>
+
+google-map {
+    height: 40vh;
+    width: 80vw;
+}
+
+paper-icon-button.createMarker #icon {
+
+	left: 2vw;
+  	padding: 5px;
+    width: 100%;
+    height: 100%;
+ }
+
+ paper-icon-button.createMarker{
+    width: 20%;
+    height: 8vh;
+ }
+
+ iron-icon.createMarker{
+ 	margin: 0px 0px 0px 22%;
+    width: 55%;
+    height: 10%;
+ }
+
+ iron-image.createMarker{
+ 	margin: auto;
+    max-width:100%;
+	max-height:100%
+ }
+
+ input.createMarker{
+ 	margin: 1% 0;
+    bottom:10%;
+    width: 50%;
+ }
+
+ input.vidInput{
+ 	margin: 1% 0;
+    bottom:10%;
+    width: 30%;
+ }
+
+ paper-button.saveGeoji{
+ 	float: right;
+    margin: 2% 0 10px 10px;
+    position:relative;
+ }
+
+ gold-email-input.createMarker{
+ 	background-color: orange;
+ 	color:red;
+ 	width: 85%;
+ 	margin: 10px 10px 10px 10px;
+ }
+
+ paper-input-container.createMarker{
+
+ 	width: 45%;
+ 	margin: 10px 10px 10px 10px;
+ 	display: inline-block;
+ }
+  paper-input-container.createMarkerData{
+
+ 	width: 85%;
+ 	margin: 10px 10px 10px 10px;
+ }
+ paper-input-container.txtData{
+ 	margin: auto;
+	background-color: #EBF0B1;
+ 	width: 80%;
+ }
+ paper-dialog.txtData{
+
+ 	width: 35vw;
+ 	height: 55%;
+ 	font-size: 1.8vw;
+ }
+ paper-dialog.decryptData{
+
+ 	width: 45vw;
+ 	height: 25%;
+ }
+ paper-button.txtData{
+
+ 	float: right;
+ 	margin: 50px 10px 10px 10px;
+ 	font-size: 1.8vw;
+ 	position:relative;
+
+ }
+ paper-dialog.imgData{
+
+ 	width: 35vw;
+ 	max-height: 70%;
+ 	min-height: 50%;
+ 	font-size: 1vw;
+
+ }
+ paper-dialog.vidData{
+
+ 	width: 45vw;
+ 	max-height: 90%;
+ 	min-height: 70%;
+ 	font-size: 1.8vw;
+
+ }
+ paper-icon-button.closeDialog{
+
+ }
+ paper-card.emailList{
+ 	display: inline-block;
+ }
+ paper-spinner-lite.saveSpinner {
+ 	width:300px;
+ 	height:300px;
+ 	--paper-spinner-stroke-width:10px;
+ 	margin: auto;
+ }
+ paper-progress.bar {
+ 	margin: auto;
+ 	width:80%;
+ }
+
+</style>	
+
+<dom-module id= "geoji-editor">
+	<template>
+
+		<firebase-auth id="{{assignCtrl('publicAuth')}}" location="https://geoji.firebaseio.com/public"></firebase-auth>
+
+		<firebase-collection
+	    	id="{{assignCtrl('geojiPublic')}}"
+			limit-to-first="100"
+		    location="https://geoji.firebaseio.com/public/"
+		    data="{{publicData}}"
+		</firebase-collection>
+		
+		<firebase-auth id="{{assignCtrl('privateAuth')}}" location="https://geoji.firebaseio.com/private"></firebase-auth>
+
+		<firebase-collection
+	    	id="{{assignCtrl('geojiPrivate')}}"
+			limit-to-first="3"
+		    location="https://geoji.firebaseio.com/private/"
+		    data="{{privateData}}"
+		    limitToFirst= "100">
+		</firebase-collection>
+
+		<firebase-auth id="{{assignCtrl('mineAuth')}}"></firebase-auth>
+
+		<firebase-collection
+	    	id="{{assignCtrl('geojiMine')}}"
+			limit-to-first="3"
+		    limitToFirst= "100">
+		</firebase-collection>
+
+		<paper-card id="{{assignCtrl('geojiCard')}}" heading="" image="{{cardImage}}">
+			<paper-input-container class="createMarker">
+			  <label>Title</label>
+			  <input id="{{assignCtrl('title')}}" class="createMarker" is="iron-input" bind-value="{{title}}">
+			  <paper-icon-button suffix icon="clear"></paper-icon-button>
+			</paper-input-container>
+			<paper-input-container class="createMarker">
+			  <label>Date</label>
+			  <input id="{{assignCtrl('date')}}" class="createMarker" is="iron-input" bind-value="{{date}}">
+			  <paper-icon-button suffix icon="arrow-drop-down-circle" on-tap="setDate"></paper-icon-button>
+			</paper-input-container>
+
+		  <div class="card-content">
+		  <div id="{{assignCtrl('containerPrivate')}}">
+		  	<paper-toggle-button id="{{assignCtrl('public')}}"  checked="{{private}}">Private</paper-toggle-button>
+		  	<paper-input-container id="{{assignCtrl('email')}}" class="createMarkerData" bind-value="{{emailValue}}" hidden="true">
+			  <label>Add Email</label>
+			  <input id="{{assignCtrl('emailInput')}}" is="iron-input" type="email" autocomplete="on" bind-value="">
+			  <paper-input-error>Enter a valid email!</paper-input-error>
+			  <paper-icon-button suffix icon="add" on-tap="addEmail"></paper-icon-button>
+			</paper-input-container>
+		  </div>
+		  <div id="{{assignCtrl('containerEncrypt')}}">
+		  	<paper-toggle-button id="{{assignCtrl('encrypt')}}" checked="{{encrypted}}">Encrypt</paper-toggle-button>
+		  	<paper-input-container id="{{assignCtrl('cipher')}}" class="createMarkerData" bind-value="{{emailValue}}" hidden="true">
+			  <label>Cipher Key</label>
+			  <input id="{{assignCtrl('cipherInput')}}" is="iron-input" bind-value="{{cipherKey}}">
+			  <input id="cipherHidden" is="iron-input" bind-value="{{cipherKey}}" hidden="true">
+			  <paper-input-error>8 characters minimum, with at least 1 capital, 1 number, and 1 symbol.</paper-input-error>
+			  <paper-icon-button suffix icon="autorenew" on-tap="createcipher"></paper-icon-button>
+			  <paper-icon-button id="{{assignCtrl('cipherCopy')}}" suffix icon="content-copy" on-tap="copycipher" class="cut" data-clipboard-action="copy" data-clipboard-target="#cipherHidden" hidden="true"></paper-icon-button>
+			</paper-input-container>
+		  </div>			
+			<paper-card id="{{assignCtrl('list')}}">{{emailString}}</paper-card>
+		  </div>
+		  <google-map 
+		  id="{{assignCtrl('map')}}"
+		  latitude="{{currentLatitude}}" 
+		  longitude="{{currentLongitude}}" 
+		  min-zoom="9" 
+		  max-zoom="30"
+          language="en" 
+          api-key="AIzaSyCgmlzQ8iH-U2KDt2mhXJbZvQm-KB5dWSo"
+          clickEvents="true" 
+          google-map-dblclick="placeMarker"
+          fitToMarkers="true"
+          zoom="20"
+          drag-events="true">
+			  <google-map-marker id="{{assignCtrl('targetMarker')}}" name="targetMarker" latitude="{{currentLatitude}}" longitude="{{currentLongitude}}"
+			                     draggable="true" drag-events="true" click-events="true" icon="/images/marker-target.png"></google-map-marker>
+			  <paper-icon-button class="topCorner" icon="autorenew" on-tap="refreshMap" style="background:white;"></paper-icon-button>
+		  </google-map>
+
+		  <div class="card-actions">
+		    <paper-icon-button on-tap="txtMarker" icon="geoji-icons:mascot-txt" class="createMarker"></paper-icon-button>
+		    <paper-icon-button on-tap="imgMarker" icon="geoji-icons:mascot-img" class="createMarker"></paper-icon-button>
+		    <paper-icon-button on-tap="vidMarker" icon="geoji-icons:mascot-vid" class="createMarker"></paper-icon-button>
+		    <paper-button id="{{assignCtrl('add')}}" class="saveGeoji" raised on-tap="addGeoji">ADD</paper-button>
+		    <paper-button id="{{assignCtrl('save')}}" class="saveGeoji" raised on-tap="saveGeoji" hidden="true">SAVE</paper-button>
+		  </div>
+		</paper-card>
+
+		<paper-dialog class="txtData" id="{{assignCtrl('txtDialog')}}" modal role="alertdialog">
+			<h2>Geoji Message</h2>
+			<paper-icon-button suffix class="closeDialog" icon="clear" on-tap=""></paper-icon-button>
+			<paper-input-container id="{{assignCtrl('txtContainer')}}" class="txtData" bind-value="">
+			  <textarea id="{{assignCtrl('txtInput')}}" class="txtData" rows="10" cols="30"></textarea> 
+			</paper-input-container>
+			<paper-button id="{{assignCtrl('cancelTxt')}}" class="txtData theme" raised on-tap="toggleTxtDialog">CANCEL</paper-button>
+			<paper-button id="{{assignCtrl('saveTxt')}}" class="txtData theme" raised on-tap="saveTxt">SAVE</paper-button>
+		</paper-dialog>
+
+		<paper-dialog class="imgData" id="{{assignCtrl('imgDialog')}}" modal role="alertdialog">
+			<h2>Geoji Image</h2>
+			<paper-toggle-button id="{{assignCtrl('coverImg')}}"  checked="{{coverSet}}" class="inlineBlock">Cover Image</paper-toggle-button>
+			<paper-spinner-lite id="{{assignCtrl('imgSpinner')}}"  class="orange createMarker"></paper-spinner-lite>
+			<div id="{{assignCtrl('tempImgs')}}" >
+				<iron-icon id="{{assignCtrl('imgIcon')}}" icon="geoji-icons:mascot-img-icon" class="createMarker"></iron-icon>
+			</div>
+			<j-img-process 
+			id="{{assignCtrl('imgProcess')}}" 
+			imgur="true" 
+			fixed="true" 
+			fixedSize="200"
+			width="200"
+			height="200" 
+			hideButtons="false"
+			handleDialog="{{getCtrlId('imgDialog')}}"
+			parentElement="{{getCtrlId('imgDialog')}}"
+			progressSpinner="{{getCtrlId('imgSpinner')}}"
+			></j-img-process>
+		</paper-dialog>
+
+		<paper-dialog class="vidData" id="{{assignCtrl('vidDialog')}}" modal role="alertdialog">
+			<paper-progress class="bar" id="{{assignCtrl('vidProgress')}}"></paper-progress>
+			<paper-progress class="bar" id="{{assignCtrl('vidPocessProgress')}}"></paper-progress>
+			<h2 class="inlineBlock">Geoji Video</h2>
+			<paper-spinner-lite id="{{assignCtrl('vidSpinner')}}"  class="orange inlineBlock"></paper-spinner-lite>
+			<paper-input-container id="{{assignCtrl('vidTitle')}}" class="vidInput" bind-value="{{vidTitle}}">
+			  <label>Title</label>
+			  <input id="{{assignCtrl('vidTitleInput')}}" is="iron-input" bind-value="">
+			</paper-input-container>
+			<paper-input-container id="{{assignCtrl('vidUrl')}}" class="vidInput unselectable" bind-value="{{vidTitle}}">
+			  <label>Link</label>
+			  <input id="{{assignCtrl('vidUrlInput')}}" is="iron-input" bind-value="{{vidUrl}}">
+			</paper-input-container>
+			<div id="{{assignCtrl('vidImgs')}}">
+				<iron-icon id="{{assignCtrl('vidIcon')}}" icon="geoji-icons:mascot-img-icon" class="createMarker"></iron-icon>
+			</div>
+			<google-youtube
+			 id="{{assignCtrl('youtubePlayer')}}"
+			 video-id="{{vidId}}"
+			 height="270px"
+			 width="100%"
+			 rel="0"
+			 autoplay="0"
+			 hidden="true"
+			 ></google-youtube>
+			<j-vid-process
+			 id="{{assignCtrl('vidProcess')}}"
+			 title="{{vidTitle}}"
+			 auto="true"
+			 privacyStatus="unlisted"
+			 categoryId= "22"
+			 videoUrl= "{{vidUrl}}"
+			 ></j-vid-process>
+		</paper-dialog>
+
+		<paper-dialog class="vidData" id="{{assignCtrl('saveDialog')}}" modal role="alertdialog">
+			<h2>Saving Geoji</h2>
+			<paper-progress class="bar" id="{{assignCtrl('encryptProgress')}}"></paper-progress>
+			<paper-spinner-lite id="{{assignCtrl('saveSpinner')}}"  class="orange createMarker saveSpinner center"></paper-spinner-lite>
+		</paper-dialog>
+
+		<paper-dialog class="decryptData" id="{{assignCtrl('cipherDialog')}}" modal role="alertdialog">
+			<paper-progress class="bar" id="{{assignCtrl('decryptProgress')}}"></paper-progress>
+			<h2>Enter Cipher Key<paper-spinner-lite id="{{assignCtrl('decryptSpinner')}}"  class="center"></paper-spinner-lite></h2>
+			<paper-input-container id="{{assignCtrl('decryptContainer')}}" class="txtData" bind-value="">
+			  <input id="{{assignCtrl('decryptInput')}}" is="iron-input" class="txtData" bind-value="{{cipherKey}}"></input> 
+			</paper-input-container>
+			<paper-button id="{{assignCtrl('cancelDecryptBtn')}}" class="txtData theme" raised on-tap="toggleDecryptDialog">CANCEL</paper-button>
+			<paper-button id="{{assignCtrl('decryptBtn')}}" class="txtData theme" raised on-tap="_decryptGeoji">DECRYPT</paper-button>
+		</paper-dialog>
+
+		<paper-dialog class="dateData" id="{{assignCtrl('dateDialog')}}" modal role="alertdialog">
+			<paper-card>
+		  		<div class="topCorner"><paper-icon-button suffix class="closeDialog" icon="clear" on-tap="closeDate" class="topCorner"></paper-icon-button></div>
+		  		<jv-datepicker id="{{assignCtrl('datePicker')}}" class="top10" date={{date}} modal></jv-datepicker>
+			</paper-card>
+		</paper-dialog>
+
+	</template>
+</dom-module>
+
+<script>
+	// I pass the button handler property from the base element, defined as the input
+	// The call back is made via document.querySelector on the input element name.
+
+	Polymer({
+		is: "geoji-editor",
+		properties: {
+			title: {
+				type: String,
+				value: "",
+				observer: "_setTitle",
+				notify: true
+			},
+			private: {
+				type: Boolean,
+				value: false,
+				observer: "_setPrivate",
+				notify: true
+			},
+			encrypted: {
+				type: Boolean,
+				value: false,
+				observer: "_setEncrypted",
+				notify: true
+			},
+			cardImg: {
+				type: String,
+				value: ""
+			},
+			heading: {
+				type: String,
+				value: "GEOJI"
+			},
+			detail: {
+				type: String,
+				value: ""
+			},
+			date: {
+				type: String
+			},
+			coverSet: {
+				type: String,
+				observer: "_setCoverImg",
+				notify: true
+			},
+			coverImg: {
+				type: String
+			},
+			description: {
+				type: String,
+				value: ""
+			},
+			currentLongitude: {
+				type: String,
+				observer: "_locationChange",
+				notify: true
+			},
+			currentLatitude: {
+				type: String,
+				observer: "_locationChange",
+				notify: true
+			},
+			markerArray: {
+				type: Array,
+				value: []
+			},
+			publicData: {
+				type: Array,
+				value: []
+			},
+			geoji: {
+				type: Object,
+				value: {}
+			},
+			geojiEncrypted: {
+				type: Object,
+				value: {}
+			},
+			vidTitle: {
+				type: String,
+				value: "new video",
+				observer: "_setVidTitle",
+				notify: true
+			},
+			vidPrivate: {
+				type: Boolean,
+				value: false,
+				observer: "_setVidPrivate",
+				notify: true
+			},
+			vidPrivacyStatus: {
+				type: String,
+				value: "public",
+				observer: "_setVidPrivate",
+				notify: true
+			},
+			vidId: {
+				type: String,
+				value: "new video",
+				observer: "_setVidId",
+				notify: true
+			},
+			vidUrl: {
+				type: String,
+				value: null,
+				observer: "_setVidUrl",
+				notify: true
+			},
+			emailValue: {
+				type: String,
+				value: "",
+				observer: "_storeEmails",
+				notify: true
+			},
+			emailList: {
+				type: Array,
+				value: []
+			},
+			emailString: {
+				type: String,
+				value: ""
+			},
+			selectedMarker: {
+				type: String
+			},
+			cipherKey: {
+				type: String,
+				value: null,
+				observer: "_validateCipher",
+				notify: true
+			},
+			firebaseKey: {
+				type: String,
+				value: null
+			},
+			uid: {
+				type: String
+			}
+
+		},
+
+		behaviors: [StyleBehaviors.JStyles, InteractionBehaviors.JHandler, InteractionBehaviors.JEvents, SelectionBehaviors.AutoId,
+			UtilityBehaviors.JUtil, CryptoBehaviors.JEncrypt, CryptoBehaviors.JDecrypt
+		],
+
+		ready: function() {
+
+
+		},
+		attached: function() {
+			var self = this;
+			var map = this.getElem(this.ctrls.map);
+			var location = this.getElem("geoLocation");
+			var target = this.getElem(this.ctrls.targetMarker);
+			var targetObj = {};
+			var title = this.getElem(this.ctrls.title);
+			var email = this.getElem(this.ctrls.email);
+			var public = this.getElem(this.ctrls.public);
+			var email = this.getElem(this.ctrls.email);
+			var emailInput = this.getElem(this.ctrls.emailInput);
+			var encrypt = this.getElem(this.ctrls.encrypt);
+			var cipher = this.getElem(this.ctrls.cipher);
+			var cipherInput = this.getElem(this.ctrls.cipherInput);
+			var cipherCopy = this.getElem(this.ctrls.cipherCopy);
+			var imgDialog = this.getElem(this.ctrls.imgDialog);
+			var imgProcess = this.getElem(this.ctrls.imgProcess);
+			var imgIcon = this.getElem(this.ctrls.imgIcon);
+			var imgSpinner = this.getElem(this.ctrls.imgSpinner);
+			var vidTitle = this.getElem(this.ctrls.vidTitleInput);
+			var vidIcon = this.getElem(this.ctrls.vidIcon);
+			var vidSpinner = this.getElem(this.ctrls.vidSpinner);
+			var vidProgress = this.getElem(this.ctrls.vidProgress);
+			var vidUrlInput = this.getElem(this.ctrls.vidUrlInput);
+			var vidDialog = this.getElem(this.ctrls.vidDialog);
+			var vidProcess = this.getElem(this.ctrls.vidProcess);
+			var player = self.getElem(self.ctrls.youtubePlayer);
+			var containerPrivate = this.getElem(this.ctrls.containerPrivate);
+			var containerEncrypt = this.getElem(this.ctrls.containerEncrypt);
+			var add = this.getElem(this.ctrls.add);
+			var save = this.getElem(this.ctrls.save);
+			var date = this.getElem(this.ctrls.datePicker);
+
+			var publicDB = this.getElem(this.ctrls.geojiPublic);
+			var publicAuth = this.getElem(this.ctrls.publicAuth);
+			var publicRef = publicAuth.ref;
+			var privateDB = this.getElem(this.ctrls.geojiPrivate);
+			var privateAuth = this.getElem(this.ctrls.privateAuth);
+			var privateRef = privateAuth.ref;
+			var mine = this.getElem(this.ctrls.geojiMine);
+			var mineAuth = this.getElem(this.ctrls.mineAuth);
+
+			this.uid = app.data.uid;
+
+			add.hidden = false;
+			save.hidden = true;
+
+
+			title.focus();
+			title.value = " ";
+			title.blur();
+
+			imgProcess.handleDialog = imgDialog.id;
+			imgProcess.handleElement = imgIcon.id;
+			imgProcess.progressSpinner = imgSpinner.id;
+			vidProcess.progressSpinner = vidSpinner.id;
+			vidProcess.progressBar = vidProgress.id;
+			vidProcess.videoIdInput = vidUrlInput.id;
+			vidProcess.handleDialog = vidDialog.id;
+
+			imgProcess.successCallback = function(e) {
+
+				if (self.openEvents['imgur-upload-success']) {
+					if (imgDialog.id === imgProcess.parentElement.id && !imgDialog.hidden && self.geoji[self.selectedMarker] !== undefined) {
+
+						self.geoji[self.selectedMarker].img = e.detail.link;
+						self.removeOpenEvent('imgur-upload-success');
+						imgDialog.toggle();
+					}
+				}
+			}
+
+			vidUrlInput.onchange = function(e) {
+
+				var selected = self.geoji[self.selectedMarker];
+
+				if (selected !== null && selected !== undefined) {
+					if (selected.type === "vid") {
+						selected.link = vidUrlInput.value;
+					}
+				}
+
+			};
+
+			this.clipboard = new Clipboard(cipherCopy);
+
+			var inlines = [containerPrivate, containerEncrypt];
+			var containers = [containerPrivate, containerEncrypt];
+
+			var topStyle = {
+				"vertical-align": "top"
+			}
+			var halfStyle = {
+				"width": "2vw"
+			}
+			var containerStyle = {
+				"top": "1vh",
+				"bottom": "1vh",
+				"height": "11vh",
+				"vertical-align": "top"
+			}
+
+			for (i in inlines) {
+				this.assignClass(inlines[i], "inlineHalf");
+			}
+
+			for (i in containers) {
+				this.assignStyles(containers[i], containerStyle);
+			}
+
+
+			this.geoji = {};
+
+			map.mapType = "satellite";
+
+			targetObj.longitude = this.currentLongitude;
+			targetObj.latitude = this.currentLatitude;
+			this.geoji.target = targetObj;
+
+
+			this.geoji.private = public.checked;
+
+			setTimeout(function() {
+
+				var location = self.getElem("geoLocation");
+				var pos;
+
+				if(location.latitude === null || location.latitude === undefined){
+					if (navigator.geolocation) {
+				        pos = navigator.geolocation.getCurrentPosition(showPosition);
+				    } else {
+				        x.innerHTML = "Geolocation is not supported by this browser.";
+				    }
+
+				    function showPosition(position) {
+
+				    	self.currentLongitude = position.coords.longitude;
+				    	self.currentLatitude = position.coords.latitude;
+
+					}
+				}
+
+				self.geoji.target.longitude = self.currentLongitude;
+				self.geoji.target.latitude = self.currentLatitude;
+				targetObj.longitude = self.currentLongitude;
+				targetObj.latitude = self.currentLatitude;
+				self.geoji.id = self.generateUid("_");
+				self.geoji.date = self.date;
+
+				self.currentLongitude = location.longitude;
+				self.currentLatitude = location.latitude;
+
+				target.longitude = location.longitude;
+				target.latitude = location.latitude;
+
+				mine.location = "https://geoji.firebaseio.com/mine/" + app.data.uid;
+				mineAuth.location = "https://geoji.firebaseio.com/mine/" + app.data.uid;
+				map["api-key"] = "AIzaSyCgmlzQ8iH-U2KDt2mhXJbZvQm-KB5dWSo";
+				// map.resize();
+
+			}, 1000);
+
+			this.clipboard.on('success', function(e) {
+				document.execCommand("copy", true, e.text);
+			});
+			this.clipboard.on('error', function(e) {
+				console.log("ERROR!");
+				console.log(e);
+			});
+
+			var onClick = function(e) {
+				//console.log(e);
+			};
+			var mapDragEnd = function(e) {
+
+				var target = self.getElem(self.ctrls.targetMarker);
+
+				setTimeout(function() {
+					if (data !== undefined || data !== null) {
+						self.geoji.target.longitude = e.target.longitude;
+						self.geoji.target.latitude = e.target.latitude;
+					}
+				}, 50);
+
+				console.log(self.geoji);
+			};
+			var targetDragEnd = function(e) {
+
+				setTimeout(function() {
+					if (data !== undefined || data !== null) {
+						self.geoji.target.longitude = e.target.longitude;
+						self.geoji.target.latitude = e.target.latitude;
+					}
+				}, 50);
+
+			};
+
+			// document.addEventListener('imgur-upload-success', function(e) {
+
+
+
+			//   if(imgDialog.id === imgProcess.parentElement.id && !imgDialog.hidden && self.geoji[self.selectedMarker] !== undefined){
+
+			//   	self.geoji[self.selectedMarker].img = e.detail.link;
+
+			//   	imgDialog.toggle();
+			//   }
+
+			//       });
+			document.addEventListener('imgur-upload-failure', function(e) {
+				alert(e.detail.data.error);
+			});
+
+			map.resize();
+
+			target.addEventListener('google-map-marker-dragend', targetDragEnd);
+			map.addEventListener('google-map-dragend', mapDragEnd);
+
+		},
+		addGeoji: function() {
+			var add = this.getElem(this.ctrls.add);
+			var save = this.getElem(this.ctrls.save);
+			var geoji = this.geoji;
+			var cipher = this.getElem(this.ctrls.cipherInput).value;
+			var saveDialog = this.getElem(this.ctrls.saveDialog);
+			var saveSpinner = this.getElem(this.ctrls.saveSpinner);
+			var mineFeed = this.getElem("mineFeed");
+			var publicDB = this.getElem(this.ctrls.geojiPublic);
+			publicDB.location = "https://geoji.firebaseio.com/public/";
+			var privateDB = this.getElem(this.ctrls.geojiPrivate);
+			privateDB.location = "https://geoji.firebaseio.com/private/";
+			var mineDB = this.getElem(this.ctrls.geojiMine);
+			mineDB.location = "https://geoji.firebaseio.com/mine/" + app.data.uid;
+			var saveGeoji = {};
+
+			if (this.geoji !== null && this.geoji !== undefined) {
+
+				saveDialog.open();
+				saveSpinner.active = true;
+
+				if ((this.geoji.encrypted) && (cipher !== null || cipher !== undefined || cipher !== "")) {
+					this._encryptGeoji();
+				} else {
+					if (!this.geoji.private) {
+						if (publicDB !== null && publicDB !== undefined) {
+							var obj = {};
+							obj.id = this.geoji.id;
+							obj.uid = app.data.uid;
+							publicDB.add(this.geoji);
+							mineDB.add(obj);
+							add.hidden = true;
+							save.hidden = false;
+							saveDialog.close();
+							saveSpinner.active = false;
+							mineFeed.render();
+						}
+					} else {
+						if (privateDB !== null && privateDB !== undefined) {
+							var obj = {};
+							obj.id = this.geoji.id;
+							obj.uid = app.data.uid;
+							privateDB.add(this.geoji);
+							mineDB.add(obj);
+							add.hidden = true;
+							save.hidden = false;
+							saveDialog.close();
+							saveSpinner.active = false;
+							mineFeed.render();
+						}
+					}
+				}
+			}
+
+
+		},
+		refreshMap: function() {
+			var map = this.getElem(this.ctrls.map);
+			map.resize();
+		},
+		refreshMine: function(){
+			var mineFeed = this.getElem("geoMine");
+			mineFeed.render();
+		},
+		setDate: function() {
+			var dialog = this.getElem(this.ctrls.dateDialog);
+
+			dialog.open();
+
+		},
+		closeDate: function() {
+			var dialog = this.getElem(this.ctrls.dateDialog);
+			var date = this.getElem(this.ctrls.datePicker);
+
+			dialog.close();
+			date.enforceDateChange();
+
+		},
+		saveGeoji: function() {
+			var geoji = this.geoji;
+			var cipher = this.getElem(this.ctrls.cipherInput).value;
+			var saveDialog = this.getElem(this.ctrls.saveDialog);
+			var saveSpinner = this.getElem(this.ctrls.saveSpinner);
+
+
+			if (this.geoji !== null && this.geoji !== undefined) {
+
+				if ((geoji.encrypted) && (cipher !== null || cipher !== undefined || cipher !== "")) {
+					saveDialog.open();
+					saveSpinner.active = true;
+					this._encryptGeoji();
+				} else {
+					this.doSave();
+				}
+			}
+
+		},
+		buildGeoji: function(obj) {
+			if (obj !== null) {
+				var self = this;
+				var map = this.getElem(this.ctrls.map);
+				var target = this.getElem(this.ctrls.targetMarker);
+				var title = self.getElem(self.ctrls.title);
+				var email = self.getElem(self.ctrls.email);
+				var public = self.getElem(self.ctrls.public);
+				var email = self.getElem(self.ctrls.email);
+				var emailInput = self.getElem(self.ctrls.emailInput);
+				var add = self.getElem(self.ctrls.add);
+				var save = self.getElem(self.ctrls.save);
+				var encrypt = self.getElem(self.ctrls.encrypt);
+
+				add.hidden = true;
+				save.hidden = false;
+				self.private = obj.private;
+				map.clear();
+				target = self.targetMarker(obj.target.longitude, obj.target.latitude, target.id);
+
+				if (obj.title !== null && obj.title !== undefined) {
+					title.value = obj.title;
+				}
+
+				if (obj.emailList !== null && obj.emailList !== undefined) {
+					self.populateEmails(obj.emailList);
+				}
+
+				if (obj.encrypted) {
+					encrypt.checked = true;
+				}
+
+
+				var markers = [];
+
+				self.currentLatitude = obj.target.latitude;
+				self.currentLongitude = obj.target.longitude;
+
+				self.geoji = obj;
+
+				for (k in obj) {
+					if (obj[k].type !== null && obj[k].type !== undefined && k !== "target") {
+
+						switch (obj[k].type) {
+							case "txt":
+								marker = self.txtMarker(obj[k].longitude, obj[k].latitude, k);
+								break;
+							case "img":
+								marker = self.imgMarker(obj[k].longitude, obj[k].latitude, k);
+								break;
+							case "vid":
+								marker = self.vidMarker(obj[k].longitude, obj[k].latitude, k);
+								break;
+							default:
+
+						}
+					}
+				}
+
+			} else {
+				console.log("cannot load geoji with id: " + obj.id);
+			}
+		},
+		loadGeoji: function(id) {
+			var self = this;
+			var map = this.getElem(this.ctrls.map);
+			var target = this.getElem(this.ctrls.targetMarker);
+			var publicDB = this.getElem(this.ctrls.geojiPublic);
+			var publicAuth = this.getElem(this.ctrls.publicAuth);
+			var publicRef = publicAuth.ref;
+			var privateDB = this.getElem(this.ctrls.geojiPrivate);
+			var privateAuth = this.getElem(this.ctrls.privateAuth);
+			var privateRef = privateAuth.ref;
+			var private = false;
+			var marker;
+
+			var copy = target.cloneNode(true);
+
+			if (this.geoji === null && this.geoji === undefined) {
+				this.geoji = {};
+			}
+
+			this.geoji.id = id;
+
+			var doLoad = function(obj) {
+				if (obj !== null) {
+					var title = self.getElem(self.ctrls.title);
+					var email = self.getElem(self.ctrls.email);
+					var public = self.getElem(self.ctrls.public);
+					var email = self.getElem(self.ctrls.email);
+					var emailInput = self.getElem(self.ctrls.emailInput);
+					var add = self.getElem(self.ctrls.add);
+					var save = self.getElem(self.ctrls.save);
+
+					add.hidden = true;
+					save.hidden = false;
+					self.private = obj.private;
+					self.date = obj.date;
+					map.clear();
+					target = self.targetMarker(obj.target.longitude, obj.target.latitude, target.id);
+
+					if (obj.title !== null && obj.title !== undefined) {
+						title.value = obj.title;
+					}
+
+					if (obj.emailList !== null && obj.emailList !== undefined) {
+						self.populateEmails(obj.emailList);
+					}
+
+
+					if (obj.encrypted) {
+						var cipher = this.getElem(this.ctrls.cipherInput).value;
+						this.ecryptedObj = obj;
+						this.decryptedObj = obj;
+						decrypt_MainObj(0, cipher);
+					} else {
+						var markers = [];
+
+						self.currentLatitude = obj.target.latitude;
+						self.currentLongitude = obj.target.longitude;
+
+						self.geoji = obj;
+
+						for (k in obj) {
+							if (obj[k].type !== null && obj[k].type !== undefined && k !== "target") {
+
+								switch (obj[k].type) {
+									case "txt":
+										marker = self.txtMarker(obj[k].longitude, obj[k].latitude, k);
+										break;
+									case "img":
+										marker = self.imgMarker(obj[k].longitude, obj[k].latitude, k);
+										break;
+									case "vid":
+										marker = self.vidMarker(obj[k].longitude, obj[k].latitude, k);
+										break;
+									default:
+
+								}
+							}
+						}
+					}
+
+				} else {
+					console.log("cannot load geoji with id: " + id);
+				}
+			}
+
+			publicRef.orderByChild("id").equalTo(id).on("child_added", function(snapshot) {
+				var obj = snapshot.val()
+				doLoad(obj);
+			});
+
+			privateRef.orderByChild("id").equalTo(id).on("child_added", function(snapshot) {
+				var obj = snapshot.val()
+				private = true;
+				doLoad(obj);
+			});
+
+		},
+		loadEncrypted: function(id) {
+			var self = this;
+			var map = this.getElem(this.ctrls.map);
+			var cipherDialog = this.getElem(this.ctrls.cipherDialog);
+			var decryptSpinner = this.getElem(this.ctrls.decryptSpinner);
+			var target = this.getElem(this.ctrls.targetMarker);
+			var publicDB = this.getElem(this.ctrls.geojiPublic);
+			var publicAuth = this.getElem(this.ctrls.publicAuth);
+			var publicRef = publicAuth.ref;
+			var privateDB = this.getElem(this.ctrls.geojiPrivate);
+			var privateAuth = this.getElem(this.ctrls.privateAuth);
+			var privateRef = privateAuth.ref;
+			var title = self.getElem(self.ctrls.title);
+			var email = self.getElem(self.ctrls.email);
+			var public = self.getElem(self.ctrls.public);
+			var email = self.getElem(self.ctrls.email);
+			var emailInput = self.getElem(self.ctrls.emailInput);
+			var add = self.getElem(self.ctrls.add);
+			var save = self.getElem(self.ctrls.save);
+
+			publicRef.orderByChild("id").equalTo(id).on("child_added", function(snapshot) {
+				var obj = snapshot.val()
+				self.decryptedObj = {};
+				self.encryptedObj = obj;
+				cipherDialog.open();
+				//doLoad(obj);
+			});
+
+			privateRef.orderByChild("id").equalTo(id).on("child_added", function(snapshot) {
+				var obj = snapshot.val();
+				self.decryptedObj = {};
+				self.encryptedObj = obj;
+				cipherDialog.open();
+				//doLoad(obj);
+			});
+
+
+		},
+		doSave: function() {
+			var self = this;
+			var publicDB = this.getElem(this.ctrls.geojiPublic);
+			var publicAuth = this.getElem(this.ctrls.publicAuth);
+			var publicRef = publicAuth.ref;
+			var privateDB = this.getElem(this.ctrls.geojiPrivate);
+			var privateAuth = this.getElem(this.ctrls.privateAuth);
+			var privateRef = privateAuth.ref;
+			var add = this.getElem(this.ctrls.add);
+			var save = this.getElem(this.ctrls.save);
+			var saveDialog = this.getElem(this.ctrls.saveDialog);
+			var saveSpinner = this.getElem(this.ctrls.saveSpinner);
+			var geoMine = this.getElem("geoMine");
+
+			var complete = function() {
+				if (add !== undefined && add !== null) {
+					if (!add.hidden) {
+						add.hidden = true;
+						save.hidden = false;
+						saveSpinner.active = false;
+						saveDialog.close();
+						geoMine.refresh();
+					} else if (add.hidden) {
+						saveSpinner.active = false;
+						saveDialog.close();
+						geoMine.refresh();
+					}
+				}
+			}
+
+			publicRef.orderByChild("id").equalTo(this.geoji.id).on("child_added", function(snapshot) {
+				self.firebaseKey = snapshot.key();
+				var obj = publicRef.child(snapshot.key());
+
+				if (self.geoji.encrypted) {
+					obj.set(self.geojiEncrypted);
+					complete();
+				} else {
+					obj.set(self.geoji);
+					complete();
+				}
+
+			});
+
+			privateRef.orderByChild("id").equalTo(this.geoji.id).on("child_added", function(snapshot) {
+				self.firebaseKey = snapshot.key();
+				var obj = privateRef.child(snapshot.key());
+
+				if (self.geoji.encrypted) {
+					obj.set(self.geojiEncrypted);
+					complete();
+				} else {
+					obj.set(self.geoji);
+					complete();
+				}
+
+			});
+
+		},
+		loadMarker: function(long, lat, id) {
+
+			var map = this.getElem(this.ctrls.map);
+			var marker = document.createElement('google-map-marker');
+			marker.setAttribute('latitude', lat);
+			marker.setAttribute('longitude', long);
+			marker.setAttribute('drag-events', true);
+			marker.setAttribute('click-events', true);
+			marker.draggable = true;
+			marker.animation = "DROP";
+			marker.id = this.addCtrl(id);
+
+			return marker;
+		},
+		createMarker: function() {
+			var map = this.getElem(this.ctrls.map);
+			var id = this.makeId();
+			var marker = document.createElement('google-map-marker');
+			marker.setAttribute('latitude', this.currentLatitude);
+			marker.setAttribute('longitude', this.currentLongitude);
+			marker.setAttribute('drag-events', true);
+			marker.setAttribute('click-events', true);
+			marker.draggable = true;
+			marker.animation = "DROP";
+			marker.id = this.assignCtrl(id);
+			// map.resize();
+
+			return marker;
+		},
+		setMarkerListeners: function(id, click, dblclick, dragend) {
+
+			var self = this;
+
+			setTimeout(function() {
+				var elem = self.getElem(id);
+				self.markerArray.push(id);
+				elem.addEventListener('google-map-marker-click', click);
+				elem.addEventListener('google-map-marker-click', dblclick);
+				elem.addEventListener('google-map-marker-dragend', dragend);
+			}, 50);
+		},
+		storeMarker: function(id, obj) {
+			this.geoji[id] = obj;
+		},
+		toggleDialog: function(event) {
+			var id = event.target.id;
+			var type = this.geoji[id].type;
+			var message = this.geoji[id].message;
+			var marker = document.querySelector("#" + id);
+
+			if (type !== undefined && type !== null) {
+
+				if (type === "img") {
+					var coverImg = this.coverImg;
+					var coverSet = this.coverSet;
+					var coverToggle = this.getElem(this.ctrls.coverImg);
+					var imgUrl = this.geoji[id].img;
+					var imgProcess = this.getElem(this.ctrls.imgProcess);
+					var imgIcon = this.getElem(this.ctrls.imgIcon);
+
+
+					this.getElem(this.ctrls.imgProcess).hideButtons = false;
+
+
+				}
+
+				var e = this.getElem(this.ctrls[type + "Dialog"]);
+				e.toggle();
+
+			}
+
+		},
+		toggleTxtDialog: function() {
+
+			var e = this.getElem(this.ctrls.txtDialog);
+			e.toggle();
+		},
+		toggleDecryptDialog: function() {
+
+			var e = this.getElem(this.ctrls.cipherDialog);
+			e.toggle();
+		},
+		targetMarker: function(long, lat, id) {
+
+			var self = this;
+			var map = this.getElem(this.ctrls.map);
+			var geoji = this.geoji;
+			var target = document.createElement('google-map-marker');
+
+			target.setAttribute('name', "targetMarker");
+			target.setAttribute('latitude', lat);
+			target.setAttribute('longitude', long);
+			target.setAttribute('drag-events', true);
+			target.setAttribute('click-events', true);
+			target.draggable = true;
+			target.animation = "DROP";
+
+			target.icon = "/images/marker-target.png";
+
+			var onClick = function(e) {
+				//console.log(e);
+			};
+
+			var targetDragEnd = function(e) {
+
+				setTimeout(function() {
+					if (data !== undefined || data !== null) {
+						self.geoji.target.longitude = e.target.longitude;
+						self.geoji.target.latitude = e.target.latitude;
+
+						//console.log(self.geoji);
+					}
+				}, 50);
+
+			};
+
+			target.addEventListener('google-map-marker-dragend', targetDragEnd);
+
+			Polymer.dom(map).appendChild(target);
+
+			return target;
+
+		},
+		txtMarker: function(long, lat, id) {
+			var self = this;
+			var map = this.getElem(this.ctrls.map);
+			var txt = this.getElem(this.ctrls.txtInput);
+			var geoji = this.geoji;
+			var doUpdate = true;
+			var marker;
+
+
+			if (typeof long === "number") {
+				marker = this.loadMarker(long, lat, id);
+				marker.icon = "/images/mascot-txt.png";
+				doUpdate = false;
+			} else {
+				marker = this.createMarker();
+				marker.icon = "/images/mascot-txt.png";
+			}
+
+			var onClick = function(e) {
+
+			};
+			var dblClick = function(e) {
+				var message = self.geoji[e.target.id].message;
+				self.selectedMarker = e.target.id;
+
+				if (message !== null && message !== undefined) {
+
+					txt.value = message;
+				} else if (message === null || message === undefined) {
+
+					txt.value = "";
+				}
+
+				self.toggleDialog(e);
+
+			};
+			var onDragEnd = function(e) {
+				var latLng = self.pixelOffsetToLatLng(e.detail.pixel.x, e.detail.pixel.y);
+				var data = geoji[marker.id];
+				var pos = this.position;
+
+				setTimeout(function() {
+					if (data !== undefined || data !== null) {
+						data.longitude = e.target.longitude;
+						data.latitude = e.target.latitude;
+					}
+				}, 50);
+			};
+
+			Polymer.dom(map).appendChild(marker);
+			this.setMarkerListeners(marker.id, onClick, dblClick, onDragEnd);
+			if (doUpdate) {
+				self.updateMarker(marker);
+			}
+
+		},
+		saveTxt: function() {
+			var txt = this.getElem(this.ctrls.txtInput);
+			var marker = this.getElem(this.selectedMarker);
+			var type = this.geoji[marker.id].type;
+
+			if (type == "txt") {
+				this.geoji[marker.id].message = txt.value;
+				this.toggleTxtDialog();
+				txt.value = "";
+			}
+
+		},
+		imgMarker: function(long, lat, id) {
+			var self = this;
+			var map = this.getElem(this.ctrls.map);
+			var geoji = this.geoji;
+			var doUpdate = true;
+			var marker;
+
+			if (typeof long === "number") {
+				marker = this.loadMarker(long, lat, id);
+				marker.icon = "/images/mascot-img.png";
+				doUpdate = false;
+			} else {
+				marker = this.createMarker();
+				marker.icon = "/images/mascot-img.png";
+			}
+
+			var onClick = function(e) {
+				//console.log(e);
+			};
+			var dblClick = function(e) {
+				var imgUrl = self.geoji[e.target.id].img;
+				var imgProcess = self.getElem(self.ctrls.imgProcess);
+				var imgIcon = self.getElem(self.ctrls.imgIcon);
+				var coverToggle = self.getElem(self.ctrls.coverImg);
+				var data = geoji[e.target.id];
+
+				self.toggleDialog(e);
+				self.selectedMarker = e.target.id;
+				imgProcess.hideImgPreview();
+				imgIcon.hidden = false;
+
+				if (imgUrl !== null && imgUrl !== undefined) {
+					imgIcon.hidden = true;
+					coverToggle.hidden = false;
+					imgProcess.hideCropper();
+					imgProcess.showImgPreview(imgUrl);
+					if (imgUrl == self.coverImg) {
+						coverToggle.checked = true;
+					} else {
+						coverToggle.checked = false;
+					}
+				} else {
+					self.addOpenEvent('imgur-upload-success', true);
+					imgProcess.hideCropper();
+					imgIcon.hidden = false;
+					coverToggle.hidden = true;
+				}
+			};
+			var onDragEnd = function(e) {
+				var latLng = self.pixelOffsetToLatLng(e.detail.pixel.x, e.detail.pixel.y);
+				var data = geoji[marker.id];
+
+				setTimeout(function() {
+					if (data !== undefined || data !== null) {
+						data.longitude = e.target.longitude;
+						data.latitude = e.target.latitude;
+					}
+				}, 50);
+			};
+
+			Polymer.dom(map).appendChild(marker);
+			this.setMarkerListeners(marker.id, onClick, dblClick, onDragEnd);
+			if (doUpdate) {
+				this.updateMarker(marker);
+			}
+
+		},
+		vidMarker: function(long, lat, id) {
+			var self = this;
+			var map = this.getElem(this.ctrls.map);
+			var geoji = this.geoji;
+			var doUpdate = true;
+			var marker;
+
+			if (typeof long === "number") {
+				marker = this.loadMarker(long, lat, id);
+				marker.icon = "/images/mascot-vid.png";
+				doUpdate = false;
+			} else {
+				marker = this.createMarker();
+				marker.icon = "/images/mascot-vid.png";
+			}
+
+			var onClick = function(e) {
+
+			};
+			var dblClick = function(e) {
+				self.toggleDialog(e);
+				self.selectedMarker = e.target.id;
+				if (self.geoji[e.target.id] !== null && self.geoji[e.target.id] !== undefined) {
+
+					var marker = self.geoji[e.target.id];
+					var vidTitle = self.getElem(self.ctrls.vidTitle);
+					var vidTitleInput = self.getElem(self.ctrls.vidTitleInput);
+					var vidId = self.getElem(self.ctrls.vidUrlInput);
+					var vidIcon = self.getElem(self.ctrls.vidIcon);
+					var player = self.getElem(self.ctrls.youtubePlayer);
+
+
+					if (marker.link !== null && marker.link !== undefined && marker.link !== "") {
+						console.log(marker.link);
+						vidTitle.hidden = true;
+
+						if (vidId !== null && vidId !== undefined) {
+							vidId.value = marker.link;
+							self.vidUrl = marker.link;
+							self.vidId = marker.link.replace("https://youtu.be/", "");
+						}
+
+						vidIcon.hidden = true;
+						player.hidden = false;
+					} else {
+						vidTitle.hidden = false;
+						vidTitleInput.focus();
+						vidTitleInput.value = "new video";
+						vidTitleInput.blur();
+
+						if (vidId !== null && vidId !== undefined) {
+							vidId.value = "";
+							self.vidUrl = "";
+						}
+
+						vidIcon.hidden = false;
+						player.hidden = true;
+					}
+
+				}
+			};
+			var onDragEnd = function(e) {
+				var latLng = self.pixelOffsetToLatLng(e.detail.pixel.x, e.detail.pixel.y);
+				var data = geoji[marker.id];
+
+				setTimeout(function() {
+					if (data !== undefined || data !== null) {
+						data.longitude = e.target.longitude;
+						data.latitude = e.target.latitude;
+					}
+				}, 50);
+			};
+
+			Polymer.dom(map).appendChild(marker);
+			this.setMarkerListeners(marker.id, onClick, dblClick, onDragEnd);
+
+			if (doUpdate) {
+				this.updateMarker(marker);
+			}
+
+		},
+		updateMarker: function(marker) {
+
+			var target = this.getElem(this.ctrls.targetMarker);
+			var targetObj = {};
+			var icon = marker.icon;
+			var obj = {};
+
+
+			if (icon !== null) {
+				if (icon.includes("txt") > 0) {
+					obj.type = "txt";
+				} else if (icon.includes("img") > 0) {
+					obj.type = "img";
+				} else if (icon.includes("vid") > 0) {
+					obj.type = "vid";
+				}
+			}
+			targetObj.longitude = target.longitude;
+			targetObj.latitude = target.latitude;
+			this.geoji.target = targetObj;
+			obj.latitude = marker.latitude;
+			obj.longitude = marker.longitude;
+			this.geoji[marker.id] = obj;
+		},
+		pixelOffsetToLatLng: function(offsetx, offsety) {
+			var map = document.querySelector('google-map').map;
+			var latlng = map.getCenter();
+			var scale = Math.pow(2, map.getZoom());
+			var nw = new google.maps.LatLng(
+				map.getBounds().getNorthEast().lat(),
+				map.getBounds().getSouthWest().lng()
+			);
+
+			var worldCoordinateCenter = map.getProjection().fromLatLngToPoint(latlng);
+			var pixelOffset = new google.maps.Point((offsetx / scale) || 0, (offsety / scale) || 0);
+
+			var worldCoordinateNewCenter = new google.maps.Point(
+				worldCoordinateCenter.x - pixelOffset.x,
+				worldCoordinateCenter.y + pixelOffset.y
+			);
+
+			var latLngPosition = map.getProjection().fromPointToLatLng(worldCoordinateNewCenter);
+
+			return latLngPosition;
+		},
+		addEmail: function() {
+			var input = this.getElem(this.ctrls.emailInput);
+			var email = this.getElem(this.ctrls.email);
+
+			if (this.emailValidate() && (!this.emailString.includes(this.emailValue))) {
+				input.invalid = false;
+				this.emailString += "  " + this.emailValue + ",";
+				this.emailList.push(this.emailValue);
+				this.geoji.emailList.push(this.emailValue);
+				input.value = "";
+			} else {
+				email.invalid = true;
+				input.value = "";
+			}
+
+
+		},
+		populateEmails: function(list) {
+
+			for (item in list) {
+
+				if (!this.emailString.includes(list[item])) {
+					this.emailString += "  " + list[item] + ",";
+					this.emailList.push(list[item]);
+				}
+			}
+
+		},
+		emailValidate: function() {
+			var input = this.getElem(this.ctrls.emailInput);
+			var email = this.getElem(this.ctrls.email);
+			if (email !== null && input !== null) {
+				if (input.value.includes('@') && input.value.includes('.')) {
+					email.invalid = false;
+					return true;
+				} else {
+					return false;
+				}
+			}
+		},
+		createcipher: function() {
+			var symbols = ["!", "@", "$", "%", "^", "&", "*", "_"];
+			var caps = ["A", "B", "C", "D", "E", "F", "G", "H", "I",
+			 "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", 
+			 "U", "V", "W", "X", "Y", "Z"];
+			var sym1 = symbols[this.getRandomInt(0, symbols.length)];
+			var sym2 = symbols[this.getRandomInt(0, symbols.length)];
+			var cap1 = caps[this.getRandomInt(0, caps.length)];
+			var cap2 = caps[this.getRandomInt(0, caps.length)];
+			var randomString = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8) + sym1 + sym2 + cap1 + cap2;
+			randomString = this.shuffleString(randomString);
+
+			var cipherInput = this.getElem(this.ctrls.cipherInput);
+
+			cipherInput.value = randomString;
+			this.cipherKey = randomString;
+		},
+		copycipher: function() {
+			var cipherInput = this.getElem(this.ctrls.cipherInput);
+			var cipherCopy = this.getElem(this.ctrls.cipherCopy);
+			var hidden = document.querySelector("#cipherHidden");
+			var cipher = cipherInput.value;
+			hidden.value = cipher;
+
+			cipherCopy["data-clipboard-text"] = cipher;
+			//console.log(this.clipboard);
+
+			//window.prompt("Copy to clipboard: Ctrl+C, Enter", cipherInput.value);
+		},
+		encrypt_MainKey: function(key, data, cipher, i) {
+			var self = this;
+
+			if (data.toString() === "true" || data.toString() === "false") {
+				data = data.toString();
+			}
+
+			triplesec.encrypt({
+
+				data: new triplesec.Buffer(data.toString()),
+				key: new triplesec.Buffer(self.cipherKey),
+				progress_hook: function(obj) { /* ... */ }
+
+			}, function(err, buff) {
+
+				if (!err) {
+					var ciphertext = buff.toString('hex');
+					var keys = Object.keys(self.geoji);
+					var eKeys = Object.keys(self.geojiEncrypted);
+
+					self.geojiEncrypted[key] = ciphertext;
+
+					if (keys.length === eKeys.length) {
+						console.log("OBJECT SHOULD BE ENCRYPTED");
+					} else {
+						self.encrypt_MainObj(i + 1, cipher);
+					}
+				}
+
+			});
+
+		},
+		encrypt_InnerData: function(key, obj, innerKey, data, cipher, i, j) {
+			var keys = Object.keys(obj);
+			var self = this;
+
+			if (data.toString() === "true" || data.toString() === "false") {
+				data = data.toString();
+			}
+
+			triplesec.encrypt({
+
+				data: new triplesec.Buffer(data.toString()),
+				key: new triplesec.Buffer(self.cipherKey),
+				progress_hook: function(obj) { /* ... */ }
+
+			}, function(err, buff) {
+
+				if (!err) {
+					var ciphertext = buff.toString('hex');
+					var keys = Object.keys(obj);
+					var eKeys = Object.keys(self.geojiEncrypted);
+					var gKeys = Object.keys(self.geoji);
+
+					if (self.geojiEncrypted[key] === null || self.geojiEncrypted[key] === undefined) {
+						self.geojiEncrypted[key] = {};
+					}
+
+					if (innerKey.toString() !== "type" && innerKey.toString() !== "private") {
+
+						self.geojiEncrypted[key][innerKey] = ciphertext;
+					} else if (innerKey.toString() === "type") {
+
+						self.geojiEncrypted[key].type = self.geoji[key].type;
+					} else if (innerKey.toString() === "private") {
+						self.geojiEncrypted[key].private = self.geoji[key].private;
+					}
+
+					if (keys.length === j + 1) {
+
+						self.encrypt_MainObj(i + 1, cipher);
+
+					} else if (keys.length > j + 1) {
+
+						self.encrypt_InnerObj(key, obj, cipher, i, j + 1);
+					}
+
+				}
+
+			});
+
+		},
+		encrypt_InnerObj: function(key, obj, cipher, i, j) {
+			var keys = Object.keys(obj);
+
+			this.encrypt_InnerData(key, obj, keys[j], obj[keys[j]], cipher, i, j);
+
+		},
+		encrypt_ArrayElem: function(key, array, cipher, i, j) {
+			self = this;
+			triplesec.encrypt({
+
+				data: new triplesec.Buffer(array[j].toString()),
+				key: new triplesec.Buffer(self.cipherKey),
+				progress_hook: function(obj) { /* ... */ }
+
+			}, function(err, buff) {
+
+				if (!err) {
+					var ciphertext = buff.toString('hex');
+					var eKeys = Object.keys(self.geojiEncrypted);
+					var gKeys = Object.keys(self.geoji);
+
+					if (self.geojiEncrypted[key] === null || self.geojiEncrypted[key] === undefined) {
+						self.geojiEncrypted[key] = [];
+					}
+
+					self.geojiEncrypted[key][j] = ciphertext;
+
+					if (j + 1 === array.length) {
+
+						self.encrypt_MainObj(i + 1, cipher);
+
+					} else if (array.length > j + 1) {
+						self.encrypt_Array(key, array, cipher, i, j + 1);
+					}
+
+				}
+
+			});
+		},
+		encrypt_Array: function(key, array, cipher, i, j) {
+			var self = this;
+
+			if (array.constructor === Array) {
+				self.encrypt_ArrayElem(key, array, cipher, i, j);
+			} else {
+				console.log("Must be type of array to encrypt.")
+			}
+
+		},
+		encrypt_MainObj: function(i, cipher) {
+			console.log("do encrypt");
+			var self = this;
+			var keys = Object.keys(self.geoji);
+			var eKeys = Object.keys(self.geojiEncrypted);
+			var gKeys = Object.keys(self.geoji);
+			var add = this.getElem(this.ctrls.add);
+			var save = this.getElem(this.ctrls.save);
+			var saveDialog = this.getElem(this.ctrls.saveDialog);
+			var saveSpinner = this.getElem(this.ctrls.saveSpinner);
+			var encryptProgress = this.getElem(this.ctrls.encryptProgress);
+			var mineFeed = this.getElem("mineFeed");
+
+			encryptProgress.value = eKeys.length * 10;
+
+			var encryptComplete = function() {
+				if (add !== undefined && add !== null) {
+					if (!add.hidden) {
+						encryptProgress.value = 0;
+						add.hidden = true;
+						save.hidden = false;
+						saveSpinner.active = false;
+						saveDialog.close();
+						mineFeed.render();
+					} else {
+
+					}
+				}
+			}
+
+			console.log(i);
+			console.log(cipher);
+
+			if(cipher !== null && cipher !== undefined && cipher !== "undefined" && cipher !== ""){
+				if (gKeys.length === eKeys.length) {
+					var publicDB = this.getElem(this.ctrls.geojiPublic);
+					publicDB.location = "https://geoji.firebaseio.com/public/";
+					var privateDB = this.getElem(this.ctrls.geojiPrivate);
+					privateDB.location = "https://geoji.firebaseio.com/private/";
+					var mineDB = this.getElem(this.ctrls.geojiMine);
+					mineDB.location = "https://geoji.firebaseio.com/mine/" + app.data.uid;
+					console.log("ALL DATA SHOULD BE ENCRYPTED.");
+
+					if (this.geojiEncrypted.private && privateDB !== null && privateDB !== undefined) {
+						if (add !== undefined && add !== null && save !== undefined && save !== null) {
+							if (!add.hidden) {
+								var obj = {};
+								obj.id = this.geoji.id;
+								obj.uid = app.data.uid;
+								privateDB.add(self.geojiEncrypted);
+								mineDB.add(obj);
+								encryptComplete();
+							} else {
+								this.doSave();
+							}
+						}
+					} else if (!this.geojiEncrypted.private && publicDB !== null && publicDB !== undefined) {
+						console.log("Should add to public db");
+						if (add !== undefined && add !== null && save !== undefined && save !== null) {
+							if (!add.hidden) {
+								console.log("ADD THE GEOJI");
+								var obj = {};
+								obj.id = this.geoji.id;
+								obj.uid = app.data.uid;
+								publicDB.add(self.geojiEncrypted);
+								mineDB.add(obj);
+								encryptComplete();
+
+							} else {
+								console.log("SAVE THE GEOJI");
+								this.doSave();
+							}
+						}
+					}
+				} else {
+					switch (keys[i]) {
+						case "id":
+							if (self.geoji.id !== null && self.geoji.id !== undefined) {
+								self.geojiEncrypted.id = self.geoji.id;
+								self.encrypt_MainObj(i + 1, cipher);
+							}else{
+								console.log("id isnt defined.");
+							}
+							break;
+						case "title":
+							console.log("encrypt title");
+							self.encrypt_MainKey(keys[i], self.geoji.title, cipher, i);
+							break;
+						case "date":
+							if (self.geoji.date !== null && self.geoji.date !== undefined) {
+								self.geojiEncrypted.date = self.geoji.date;
+								self.encrypt_MainObj(i + 1, cipher);
+							}else{
+								console.log("date isnt defined.");
+							}
+							break;
+						case "private":
+
+							if (self.geoji.private !== null && self.geoji.private !== undefined) {
+								self.geojiEncrypted.private = self.geoji.private;
+								self.encrypt_MainObj(i + 1, cipher);
+							}else{
+								console.log("date isnt defined.");
+							}
+							break;
+						case "encrypted":
+							console.log("encrypt encrypted");
+
+							if (self.geoji.encrypted !== null && self.geoji.encrypted !== undefined) {
+								self.geojiEncrypted.encrypted = true;
+								self.encrypt_MainObj(i + 1, cipher);
+							}else{
+								console.log("encrypted isnt defined.");
+							}
+							break;
+						case "emailList":
+							console.log("encrypt email list");
+
+							if (self.geoji.emailList !== null && self.geoji.emailList !== undefined && self.geoji.emailList.length > 0) {
+								self.geojiEncrypted.emailList = [];
+								self.encrypt_Array(keys[i], self.geoji.emailList, cipher, i, 0);
+							} else {
+								self.geojiEncrypted.emailList = [];
+								self.encrypt_MainObj(i + 1, cipher);
+							}
+
+							break;
+						case "target":
+
+							if (self.geoji.target !== null && self.geoji.target !== undefined) {
+
+								self.geojiEncrypted.target = self.geoji.target;
+								self.encrypt_MainObj(i + 1, cipher);
+							}
+							break;
+						default:
+							console.log("default");
+							console.log(keys[i]);
+
+							if (typeof self.geoji[keys[i]] === "object") {
+								console.log("encrypting innerObj");
+								self.encrypt_InnerObj(keys[i], self.geoji[keys[i]], cipher, i, 0);
+							}
+
+							break;
+					}
+				}
+			}else{
+				alert("a cipher needs to be defined!");
+				saveSpinner.active = false;
+				saveDialog.close();
+			}
+
+		},
+		decrypt_MainObj: function(i, cipher) {
+			var self = this;
+			this.geoji = this.decryptedObj;
+			console.log(this.encryptedObj);
+			var keys = Object.keys(self.encryptedObj);
+			var dKeys = Object.keys(self.decryptedObj);
+			var eKeys = Object.keys(self.encryptedObj);
+			var add = this.getElem(this.ctrls.add);
+			var save = this.getElem(this.ctrls.save);
+			var saveDialog = this.getElem(this.ctrls.saveDialog);
+			var decryptSpinner = this.getElem(this.ctrls.decryptSpinner);
+			var decryptProgress = this.getElem(this.ctrls.decryptProgress);
+
+			this.decryptCallback = this.decrypt_MainObj;
+			decryptProgress.value = dKeys.length * 10;
+
+			if (this.decryptedObj === null && this.decryptedObj === undefined) {
+				this.decryptedObj = {};
+			}
+
+			var decryptComplete = function() {
+				if (add !== undefined && add !== null) {
+					if (!add.hidden) {
+						add.hidden = true;
+						save.hidden = false;
+						saveSpinner.active = false;
+						saveDialog.close();
+					} else {
+
+					}
+				}
+			}
+
+			if (eKeys.length === dKeys.length) {
+				var cipherDialog = this.getElem(this.ctrls.cipherDialog);
+
+				cipherDialog.close();
+				decryptProgress.value = 0;
+				decryptSpinner.active = false;
+				this.buildGeoji(this.decryptedObj);
+
+				console.log("ALL DATA SHOULD BE DECRYPTED.");
+
+			} else {
+				switch (keys[i]) {
+					case "id":
+						if (self.encryptedObj.id !== null && self.encryptedObj.id !== undefined) {
+							self.decryptedObj.id = self.encryptedObj.id;
+							self.decrypt_MainObj(i + 1, this.cipherKey);
+						}
+						break;
+					case "title":
+						console.log("decrypt title");
+
+						self.decryptMainKey(keys[i], self.encryptedObj.title, this.cipherKey, i);
+						break;
+					case "date":
+						if (self.encryptedObj.date !== null && self.encryptedObj.date !== undefined) {
+							self.decryptedObj.date = self.encryptedObj.date;
+							self.decrypt_MainObj(i + 1, this.cipherKey);
+						}
+						break;
+					case "private":
+
+						if (self.encryptedObj.private !== null && self.encryptedObj.private !== undefined) {
+							self.decryptedObj.private = self.encryptedObj.private;
+							self.decrypt_MainObj(i + 1, this.cipherKey);
+						}
+						break;
+					case "encrypted":
+						console.log("decrypt encrypted");
+
+						if (self.encryptedObj.encrypted !== null && self.encryptedObj.encrypted !== undefined) {
+							self.decryptedObj.encrypted = true;
+							self.decrypt_MainObj(i + 1, this.cipherKey);
+						}
+						break;
+					case "emailList":
+						console.log("decrypt email list");
+
+						if (self.encryptedObj.emailList !== null && self.encryptedObj.emailList !== undefined) {
+							self.decryptedObj.emailList = [];
+							self.decryptArray(keys[i], self.encryptedObj.emailList, this.cipherKey, i, 0);
+						}
+
+						break;
+					case "target":
+
+						if (self.encryptedObj.target !== null && self.encryptedObj.target !== undefined) {
+							self.decryptedObj.target = self.encryptedObj.target;
+							self.decrypt_MainObj(i + 1, this.cipherKey);
+						}
+						break;
+					default:
+						console.log("decrypt default");
+
+						if (typeof self.encryptedObj[keys[i]] === "object") {
+							console.log("decrypting innerObj");
+							self.decryptedObj[keys[i]] = {};
+							self.decryptInnerObj(keys[i], self.encryptedObj[keys[i]], this.cipherKey, i, 0);
+						}
+
+						break;
+				}
+			}
+
+		},
+		_encryptGeoji: function() {
+			var cipher = this.getElem(this.ctrls.cipherInput).value;
+
+			this.geojiEncrypted = {};
+			this.encrypt_MainObj(0, cipher);
+
+		},
+		_decryptGeoji: function() {
+			var cipher = this.getElem(this.ctrls.decryptInput).value;
+			var decryptSpinner = this.getElem(this.ctrls.decryptSpinner);
+
+			decryptSpinner.active = true;
+
+			this.skipKeys = ["id", "type", "date", "target"];
+
+			this.decrypt_MainObj(0, this.cipherKey);
+		},
+		_getCurrentLocation: function() {
+			console.log("getting current location.");
+		},
+		_setTitle: function() {
+			var title = this.getElem(this.ctrls.title);
+
+			if (title !== null) {
+				this.geoji.title = title.value;
+			}
+		},
+		_setPrivate: function() {
+			var userEmail = app.data.email;
+			var emailInput = this.getElem(this.ctrls.emailInput);
+			var geojiEmails;
+			var pToggle = this.getElem(this.ctrls.public);
+
+			if ((this.geoji !== null && this.geoji !== undefined)) {
+				var geojiEmails = this.geoji.emailList;
+				if (geojiEmails === null || geojiEmails === undefined) {
+					this.geoji.emailList = [];
+				}
+			}
+
+			if (pToggle !== null) {
+				this.geoji.private = pToggle.checked;
+				this.getElem(this.ctrls.email).hidden = !pToggle.checked;
+
+				if (this.getElem(this.ctrls.email).hidden === false) {
+					emailInput.focus();
+					emailInput.value = " ";
+					emailInput.blur();
+					if (!this.emailString.includes(userEmail)) {
+						this.emailString += "  " + userEmail + ",";
+						this.emailList.push(userEmail);
+						this.geoji.emailList.push(userEmail);
+					}
+				} else if (this.getElem(this.ctrls.email).hidden === true) {
+					this.emailString = " ";
+					this.emailList = [];
+					this.geoji.emailList = [];
+				}
+
+			}
+		},
+		_setEncrypted: function() {
+			var cipherInput = this.getElem(this.ctrls.cipherInput);
+			var pToggle = this.getElem(this.ctrls.encrypt);
+
+			if (pToggle !== null) {
+				this.geoji.encrypted = pToggle.checked;
+				this.getElem(this.ctrls.cipher).hidden = !pToggle.checked;
+				if (this.getElem(this.ctrls.cipher).hidden === false) {
+					cipherInput.focus();
+					cipherInput.value = "undefined";
+					cipherInput.blur();
+				}
+			}
+		},
+		_setCoverImg: function() {
+
+			if (this.coverSet === true) {
+				if (this.geoji !== null && this.geoji !== undefined) {
+					if (this.selectedMarker !== null && this.selectedMarker !== undefined) {
+						var marker = this.getElem(this.selectedMarker);
+						var data = this.geoji[this.selectedMarker];
+						if (data.type === "img" && data.img !== null && data.img !== undefined) {
+							this.geoji.coverImg = data.img;
+							this.coverImg = data.img;
+						}
+					}
+				}
+			} else {
+
+			}
+
+
+		},
+		_validateCipher: function(){
+			var input = this.getElem(this.ctrls.cipherInput);
+			var cipher = this.getElem(this.ctrls.cipher);
+			var re = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
+
+			if(cipher !== null && cipher !== undefined
+			 && input !== null && input !== undefined
+			 && this.cipherKey !== null && this.cipherKey !== undefined){
+			 	console.log("HAHAHAHAHAHA");
+			 	console.log(re.test(this.cipherKey));
+				cipher.invalid = !re.test(this.cipherKey);
+			}
+
+		},
+		_storeEmails: function() {
+			this.geoji.emailList = this.emailList;
+		},
+		_setVidTitle: function() {
+			var vidTitle = this.getElem(this.ctrls.vidTitleInput);
+			var selected = this.getElem(this.selectedMarker);
+
+			if (this.geoji !== null && this.geoji !== undefined && this.vidTitle !== null && this.vidTitle !== undefined && this.selected !== null && this.selected !== undefined) {
+				this.geoji[selected].title = this.vidTitle;
+			}
+
+		},
+		_setVidId: function() {
+			var vidId = this.getElem(this.ctrls.vidIdInput);
+			var vidIcon = this.getElem(this.ctrls.vidIcon);
+			var player = this.getElem(this.ctrls.youtubePlayer);
+			var selected = this.getElem(this.selectedMarker);
+
+			if (this.geoji !== null && this.geoji !== undefined && this.vidId !== null && this.vidId !== undefined && this.selected !== null && this.selected !== undefined) {
+				this.geoji[selected].link = this.vidId;
+				vidId.value = "https://youtu.be/" + this.vidId;
+				vidicon.hidden = true;
+			}
+
+		},
+		_setVidUrl: function() {
+			var vidId = this.getElem(this.ctrls.vidIdInput);
+			var vidIcon = this.getElem(this.ctrls.vidIcon);
+			var player = this.getElem(this.ctrls.youtubePlayer);
+			var selected = this.getElem(this.selectedMarker);
+
+		},
+		_setVidPrivate: function() {
+
+
+		},
+		_locationChange: function() {
+
+		}
+	});
+</script>

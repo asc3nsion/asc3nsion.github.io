@@ -1,4 +1,28 @@
-<script>
+<!--
+This is a behavior handles attaching a method to a another
+element such as a button.  The "handler" is the method name
+that is to be triggered by the element with this behavior.
+
+handler = string name of method to be called
+
+parameters = are any parameters that need to passed.
+
+setParams = sets the parameters prop via a passed array.
+
+addParam = adds a single parameter to parameters prop.
+
+elemCheck = internal method to handle checking the local id.
+
+call =  is the method used to fire the passed method by name.
+
+*It expects an input be defined, if the button is calling into
+a seperate web element.  Otherwise it will look for a method
+within the element using it.
+
+*Can only pass a max of 4 parameters per handler."
+ -->
+
+ <script>
  	var InteractionBehaviors = InteractionBehaviors || {};
  	InteractionBehaviors.JHandler = {
 

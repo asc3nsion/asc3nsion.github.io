@@ -1,0 +1,116 @@
+<!-- 
+This is an element button for login button using firebase api.  
+This depends on j-button element which is a generic button.
+
+ style of the button is passed into j-button via j-styles behavior.
+ interaction is passed into j-button via j-handler.
+ if the button doesn't have an explicit id, one is assigned via auto-id.
+-->
+<!-- components: -->
+
+<!-- behaviors: -->
+<link rel="import" href="../../behaviors/style/j-styles.html">
+<link rel="import" href="../../behaviors/interaction/j-handler.html">
+<link rel="import" href="../../behaviors/selection/auto-id.html">
+<style>
+	
+	paper-button.custom {
+		font-size: 1.3vw;
+	}
+
+</style>
+<dom-module id= "login-btn">
+	<template>
+		<template is="dom-if" if="{{social}}">
+			<j-social-button
+			 styles="{{styles}}"
+			 input="{{input}}"
+			 handler="{{handler}}"
+			 icon="{{icon}}"
+			 icon_color="{{icon_color}}"
+			 parameters="{{parameters}}"
+			 classes="{{assignClasses}}"
+			 >{{provider}}
+			 </j-social-button>
+		</template>
+		<template is="dom-if" if="{{iron_icon}}">
+			<j-icon-button
+			 styles="{{styles}}"
+			 input="{{input}}"
+			 handler="{{handler}}"
+			 icon="{{icon}}"
+			 icon_color="{{icon_color}}"
+			 text= "{{provider}}"
+			 parameters="{{parameters}}"
+			 classes="{{assignClasses}}"
+			 >{{provider}}
+			 </j-icon-button>
+		</template>
+		<template is="dom-if" if="{{basic}}">
+			<j-button
+			 styles="{{styles}}"
+			 input="{{input}}"
+			 handler="{{handler}}"
+			 text= "{{provider}}"
+			 parameters="{{parameters}}"
+			 classes="{{assignClasses}}"
+			 >{{provider}}
+			 </j-button>
+		</template>
+	</template>
+</dom-module>
+
+<script>
+	// I pass the button handler property from the base element, defined as the input
+	// The call back is made via document.querySelector on the input element name.
+	addEventListener('WebComponentsReady', function() {
+		Polymer({
+
+			is: "login-btn",
+			properties: {
+				input:{
+					type: String,
+					value:""
+				},
+				provider:{
+					type: String,
+					value:""
+				},
+				icon:{
+					type: String,
+					value: ""
+				},
+				icon_color:{
+					type: String,
+					value:"none"
+				},
+				basic:{
+					type: Boolean,
+					value: false
+				},
+				social:{
+					type: Boolean,
+					value: false
+				},
+				iron_icon:{
+					type: Boolean,
+					value: false
+				}
+				
+			},
+
+			behaviors:[StyleBehaviors.JStyles, InteractionBehaviors.JHandler, SelectionBehaviors.AutoId],
+			attached: function(){
+				var params = [this.provider];
+				var classes = ["theme"];
+				
+				this.setParams(params);
+				this.assignClasses = classes;
+
+				this.styles = {
+					margin: "3% 3% 3% 3%"
+				}
+			}
+		});
+	});
+</script>

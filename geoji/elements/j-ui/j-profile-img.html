@@ -1,0 +1,76 @@
+<!-- 
+This is an element button used as a base for other buttons.
+ text = The text to be displayed on the button
+ icon = The icon to be desplayed on the button
+ iput = This is the id of the component the button will call a method on.
+
+ style of the button is set via j-styles behavior.
+ interaction is set via j-handler.
+ if the button doesn't have an explicit id, one is assigned via auto-id.
+-->
+<!-- components: -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<!-- behaviors: -->
+<link rel="import" href="../../behaviors/style/j-styles.html">
+<link rel="import" href="../../behaviors/interaction/j-handler.html">
+<link rel="import" href="../../behaviors/selection/auto-id.html">
+
+<style>
+	iron-image.profileImg {
+		
+	}
+</style>	
+
+<dom-module id= "j-profile-img">
+	<template>
+		<iron-image d="{{assignCtrl('img')}}" alt="Profile Pic" src="{{url}}" class="profileImg"></iron-image>
+	</template>
+</dom-module>
+
+<script>
+	// I pass the button handler property from the base element, defined as the input
+	// The call back is made via document.querySelector on the input element name.
+	Polymer({
+		is: "j-profile-img",
+		properties: {
+			url: {
+				type: String,
+				value: ""
+			},
+			provider: {
+				type: String,
+				value: "",
+				observer: "providerStyle",
+				notify: true
+			},
+			text: {
+				type: String,
+				value: ""
+			},
+			icon: {
+				type: String,
+				value: ""
+			},
+			input: {
+				type: String,
+				value: ""
+			}
+		},
+
+		behaviors: [StyleBehaviors.JStyles, InteractionBehaviors.JHandler, SelectionBehaviors.AutoId],
+
+		ready: function() {
+
+		},
+		attached: function() {
+
+		},
+		setURL: function(url) {
+			this.url = url;
+		},
+		providerStyle: function() {
+			this.addClass(this.provider);
+		}
+
+	});
+</script>

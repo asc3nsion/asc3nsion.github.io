@@ -1,0 +1,288 @@
+<!-- 
+This is an element button used as a base for other buttons.
+ text = The text to be displayed on the button
+ icon = The icon to be desplayed on the button
+ iput = This is the id of the component the button will call a method on.
+
+ style of the button is set via j-styles behavior.
+ interaction is set via j-handler.
+ if the button doesn't have an explicit id, one is assigned via auto-id.
+-->
+<!-- components: -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<!-- behaviors: -->
+<link rel="import" href="../../behaviors/style/j-styles.html">
+<link rel="import" href="../../behaviors/interaction/j-handler.html">
+<link rel="import" href="../../behaviors/interaction/j-events.html">
+<link rel="import" href="../../behaviors/selection/auto-id.html">
+
+<style is="custom-style">
+	#profilePic {
+	  width: 8%;
+	  height: 8%;
+	  --iron-image-width: 90%;
+	  --iron-image-height: 90%;
+	  margin:0 auto;
+	}
+
+	.avatarSpinner{
+      position: absolute;
+      top: 6px;
+      left: 6px;
+    }
+
+    paper-button.profileBtns{
+		position:relative;
+		margin: 50px 10px 10px 10px;
+	 	font-size: 1.8vw;
+	 	position:relative;
+    }
+
+    paper-dialog.profilePic {
+    	width: 10vw;
+    	height: 10vh;
+    }
+
+</style>	
+
+<dom-module id= "geo-profile-img">
+	<template>
+		<div>
+			<j-profile-img id="profilePic" class="j-profile-img" url="{{url}}" on-tap="dialogHandler"></j-profile-img>
+			<paper-spinner-lite id="{{assignCtrl('progressSpinner')}}"  class="orange avatarSpinner"></paper-spinner-lite>
+		</div>
+		
+		<paper-dialog id="{{assignCtrl('profileDialog')}}" modal role="alertdialog">
+			
+			<ul>
+				<li class="userDataInput center"><h1>User Profile</h1></li>
+				<li class="userDataInput center">
+					<j-profile-img 
+					id="{{assignCtrl('loadProfileImg')}}" 
+					class="updateProfilePic j-profile-img" 
+					url="{{url}}" 
+					on-tap="loadProfileImg"
+					></j-profile-img>
+					<j-img-process 
+					id="{{assignCtrl('imgProcess')}}" 
+					imgur="true" 
+					fixed="true" 
+					fixedSize="200"
+					width="200"
+					height="200" 
+					hideButtons="true"
+					parentElement="{{getCtrlId('profileDialog')}}"
+					uploadBtn="{{getCtrlId('saveBtn')}}"
+					></j-img-process>
+					<!-- <paper-card heading="Change" image="{{url}}" class="white horizontal" on-tap"loadProfileImg"></paper-card> -->
+				</li>
+				<li class="userDataInput center"><input id="{{assignCtrl('imgInput')}}" type="file" hidden="true"></input></li>
+				<li class="userDataInput center"><input id="{{assignCtrl('nameInput')}}" value="{{userName::input}}"></input></li>
+				<li class="userDataInput center"><h3>{{email}}</h3></li>
+			</ul>
+		  <div class="buttons">
+		  	<paper-button id="{{assignCtrl('logoutBtn')}}" dialog-dismiss on-tap="logoutUser">Log Out</paper-button>
+		    <paper-button id="{{assignCtrl('cancelBtn')}}" dialog-dismiss on-tap="cancelProfileChanges">Cancel</paper-button>
+		    <paper-button id="{{assignCtrl('saveBtn')}}" dialog-confirm autofocus on-tap="updateUserData" disabled="true">Save</paper-button>
+		  </div>
+		</paper-dialog>
+	</template>
+</dom-module>
+
+<script>
+	// I pass the button handler property from the base element, defined as the input
+	// The call back is made via document.querySelector on the input element name.
+	Polymer({
+		is: "geo-profile-img",
+		properties: {
+			url: {
+				type: String,
+				value: ""
+			},
+			provider: {
+				type: String,
+				value: "",
+				observer: "providerStyle",
+				notify: true
+			},
+			userName: {
+				type: String,
+				value: ""
+			},
+			email: {
+				type: String,
+				value: null
+			},
+			customName: {
+				type: String,
+				value: null,
+				observer: "_enableSave",
+				notify: true
+			},
+			customUrl: {
+				type: String,
+				value: null,
+				observer: "_enableSave",
+				notify: true
+			},
+			update: {
+				type: Boolean,
+				value: false,
+				observer: "updateUserData",
+				notify: true
+			},
+			text: {
+				type: String,
+				value: ""
+			},
+			icon: {
+				type: String,
+				value: ""
+			},
+			input: {
+				type: String,
+				value: ""
+			},
+			editProfileImg: {
+				type: Boolean,
+				value: false
+			}
+		},
+
+		behaviors: [StyleBehaviors.JStyles, InteractionBehaviors.JHandler, InteractionBehaviors.JEvents, SelectionBehaviors.AutoId],
+
+		ready: function() {
+			app.elements.profileDialog = this.id;
+		},
+		attached: function() {
+
+			var e = this.getElem(this.ctrls.imgInput);
+			var p = this.getElem(this.ctrls.ImgUpload);
+			var nameInput = this.getElem(this.ctrls.nameInput);
+			var imageProcess = this.getElem(this.ctrls.imgProcess);
+			var uploadBtn = imageProcess.uploadBtn;
+			var processInput = this.getElem(imageProcess.ctrls.imgInput);
+			var progress = this.getElem(this.ctrls.progressSpinner);
+			var self = this;
+
+			imageProcess.successCallback = function(e) {
+				if (self.openEvents['imgur-upload-success']) {
+					console.log("GEO_PROFILE");
+					console.log(e);
+					self.url = e.detail.link;
+					self.customUrl = e.detail.link;
+					self.removeOpenEvent('imgur-upload-success');
+					self.editProfileImg = false;
+					progress.active = false;
+					self.update = true;
+				}
+			}
+
+			processInput.addEventListener('change', function() {
+				// Here I am setting the imgur file and waiting for 
+				// success response.  So I need to create an open 
+				// event for the listener locally.
+				self.addOpenEvent('imgur-upload-success', true);
+				//p.file = this.files[0];
+				console.log(this.files[0]);
+
+			});
+			// document.addEventListener('imgur-upload-success', function(e) {
+
+			// 	console.log("WORKINGGGGGGGG?????");
+
+			//   if((self.openEvents['imgur-upload-success'])&&(self.ctrls.saveBtn === uploadBtn)){
+			//   	console.log("GEO_PROFILE");
+			// 	console.log(e);
+			//     self.url = e.detail.link;
+			//     self.customUrl = e.detail.link;
+			//     self.removeOpenEvent('imgur-upload-success');
+			//     self.editProfileImg = false;
+			//     progress.active = false;
+			//     self.update = true;
+			//   }
+
+			//       });
+			document.addEventListener('imgur-upload-failure', function(e) {
+				console.log(e);
+				alert(e.detail.data.error);
+			});
+			nameInput.addEventListener('change', function(e) {
+				self.customName = this.value;
+			});
+		},
+		setURL: function(url) {
+			this.url = url;
+		},
+		providerStyle: function() {
+			this.addClass(this.provider);
+		},
+		dialogHandler: function() {
+			var e = this.getElem(this.ctrls.profileDialog);
+			this.userName = app.data.userName;
+			this.email = app.data.email;
+			e.toggle();
+		},
+		saveUserData: function() {
+
+			if (this.editProfileImg) {
+				this.editProfileImg = false;
+			}
+
+			this.update = true;
+		},
+		updateUserData: function() {
+			var nameInput = this.getElem(this.ctrls.nameInput);
+			var imgProcess = this.getElem(this.ctrls.imgProcess);
+			var profileImg = this.getElem(this.ctrls.loadProfileImg);
+			var profilePic = this.getElem("profilePic");
+			var progress = this.getElem(this.ctrls.progressSpinner);
+
+			if (this.editProfileImg) {
+				var uploadBtn = imgProcess.ctrls.uploadBtn;
+				//profilePic.hidden = "true";
+				progress.active = "true";
+				this.fireJMouseEvent(uploadBtn, "click");
+			} else {
+
+				if (nameInput !== null && this.customName !== "") {
+					app.setUserData("customName", nameInput.value);
+				}
+				if (this.customUrl !== "") {
+					app.setUserData("customProfileImg", this.customUrl);
+					if (profilePic !== null && progress !== null) {
+						console.log(progress);
+						//profilePic.hidden = "false";
+
+					}
+				}
+			}
+		},
+		logoutUser: function() {
+			app.logout();
+		},
+		cancelProfileChanges: function() {
+			var nameInput = this.getElem(this.ctrls.nameInput);
+
+			nameInput.value = app.data.userName;
+			this.url = app.data.profileImg;
+		},
+		loadProfileImg: function() {
+			var imgProcess = this.getElem(this.ctrls.imgProcess);
+			var profileImg = this.getElem(this.ctrls.loadProfileImg);
+			var imgInput = imgProcess.ctrls.imgInput;
+			this.fireJMouseEvent(imgInput, "click");
+			profileImg.hidden = "true";
+			this._enableSave();
+			this.editProfileImg = true;
+		},
+		_enableSave: function() {
+			var e = this.getElem(this.ctrls.saveBtn);
+			if (e !== null) {
+				this.getElem(this.ctrls.saveBtn).disabled = false;
+			}
+		}
+
+	});
+</script>

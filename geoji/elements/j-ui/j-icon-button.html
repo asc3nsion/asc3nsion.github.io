@@ -1,0 +1,63 @@
+<!-- 
+This is an element button used as a base for other buttons.
+ text = The text to be displayed on the button
+ icon = The icon to be desplayed on the button
+ iput = This is the id of the component the button will call a method on.
+
+ style of the button is set via j-styles behavior.
+ interaction is set via j-handler.
+ if the button doesn't have an explicit id, one is assigned via auto-id.
+-->
+<!-- components: -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<!-- behaviors: -->
+<link rel="import" href="../../behaviors/style/j-styles.html">
+<link rel="import" href="../../behaviors/interaction/j-handler.html">
+<link rel="import" href="../../behaviors/selection/auto-id.html">
+
+<dom-module id= "j-icon-button">
+	<template>
+		<paper-button id="{{assignElem()}}" raised on-tap="call"><iron-icon icon="{{icon}}" color="{{icon_color}}"></iron-icon></paper-button>
+	</template>
+</dom-module>
+
+<script>
+	// I pass the button handler property from the base element, defined as the input
+	// The call back is made via document.querySelector on the input element name.
+	Polymer({		
+		is: "j-icon-button",
+		properties: {
+			text:{
+				type: String,
+				value:""
+			},
+			icon:{
+				type: String,
+				value:"none"
+			},
+			icon_color:{
+				type: String,
+				value:"none"
+			},
+			input:{
+				type: String,
+				value:""
+			}
+		},
+
+		behaviors:[StyleBehaviors.JStyles, InteractionBehaviors.JHandler, SelectionBehaviors.AutoId],
+
+		ready: function(){
+			
+		},
+
+		attached: function(){
+
+			for(id in this.elems){
+				if(this.classes.length > 0){
+					this.assignClass(id, this.getClasses());
+				}
+			}	
+		}
+	});
+</script>

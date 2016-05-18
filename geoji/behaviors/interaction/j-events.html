@@ -1,4 +1,21 @@
-<script>
+<!--
+This is a behavior handles adding event listeners
+or firing events.
+
+addJEvent = will add an event on element. 
+id = string, event = string, callback = method, params = array
+four parameters for callback max.
+
+fireJMouseEvent = fires a mouse event on element by id.
+id = string, event = string
+
+passing an object to JCallbacks and then jEvents will
+add listeners in a loop.  Callbacks should be added first,
+then the events table can be updated.
+
+ -->
+
+ <script>
  	var InteractionBehaviors = InteractionBehaviors || {};
  	InteractionBehaviors.JEvents = {
 

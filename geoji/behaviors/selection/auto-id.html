@@ -1,4 +1,44 @@
-<script>
+<!--
+This is a behavior that attaches auto assignment of id to an element.
+This is helpful in having full access of multiple instances of objects.
+HardId enables a check on whether or not the id is system created.
+
+hardId = Remains true if the id is set in the main html, false if set
+by this behavior.
+
+classes = array to hold classes for this
+
+assignClasses = array to hold classes to assign to child elems.
+
+elems = table to store assigned elems.
+
+getId = returns id of the element calling with this behavior.
+
+getSelf = returns this element.
+
+getElem = returns element by passed id.
+
+getClasses = returns concat string of classes array.
+
+setClass = sets class of this element.
+
+addClass = adds class to this element.
+
+setClasses = sets class of this to concat of classes array.
+
+assignElem = creates returns a new id, and adds it to elems table.
+
+assignClass = method used for passing classes into child elements.
+
+makeId = creates and returns a unique id.
+
+ctrls = A table for ctrl elements, controlled locally.
+
+asignCtrl = Assigns unique id, and adds to ctrls table.
+
+ -->
+
+ <script>
  	var SelectionBehaviors = SelectionBehaviors || {};
  	SelectionBehaviors.AutoId = {
 

@@ -1,0 +1,432 @@
+<!-- 
+This is an element button used as a base for other buttons.
+ text = The text to be displayed on the button
+ icon = The icon to be desplayed on the button
+ iput = This is the id of the component the button will call a method on.
+
+ style of the button is set via j-styles behavior.
+ interaction is set via j-handler.
+ if the button doesn't have an explicit id, one is assigned via auto-id.
+-->
+<!-- components: -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<!-- behaviors: -->
+<link rel="import" href="../../behaviors/style/j-styles.html">
+<link rel="import" href="../../behaviors/interaction/j-handler.html">
+<link rel="import" href="../../behaviors/interaction/j-events.html">
+<link rel="import" href="../../behaviors/selection/auto-id.html">
+<link rel="import" href="../../behaviors/style/j-styles.html">
+<link rel="import" href="../../behaviors/util/j-util.html">
+
+<style>
+
+	paper-card.collection{
+		--paper-card-background-color: white;
+		--paper-card-background-size: cover;
+		max-width: 40%;
+      	min-width: 300px;
+	    height: 50%;
+	    padding: 1%;
+	    margin:1%;
+
+	}
+
+	paper-button.collection{
+		max-width: 25%;
+      	min-width: 50px;
+	}
+
+	p.linkText {
+		font-size: 2vw;
+	}
+	
+
+</style>	
+
+<dom-module id= "geoji-feed">
+	<template>
+
+		<firebase-collection
+	    	id= "{{assignCtrl('geojiMine')}}"
+			limit-to-first="100"
+		    location="{{mineURL}}"
+		    data="{{mineFeed}}">
+		</firebase-collection>
+
+	    <firebase-collection
+	    	id= "{{assignCtrl('feed')}}"
+			limit-to-first="100"
+			location="{{feedURL}}"
+		    data="{{mainFeed}}">
+		</firebase-collection>
+
+	    <firebase-collection
+	    	id= "{{assignCtrl('geojiPublic')}}"
+			limit-to-first="100"
+		    location="{{publicURL}}"
+		    data="{{publicFeed}}">
+		</firebase-collection>
+
+		<firebase-collection
+	    	id= "{{assignCtrl('geojiPrivate')}}"
+			limit-to-first="100"
+		    location="{{privateURL}}"
+		    data="{{privateFeed}}">
+		</firebase-collection>
+
+
+		<template is="dom-repeat" items="{{publicFeed}}" as="public">
+			<div name="[[_computeData(public)]]" hidden="true"></div>
+		</template>
+
+		<template is="dom-repeat" items="{{privateFeed}}" as="private">
+			<div name="[[_computeData(private)]]" hidden="true"></div>
+		</template>
+
+		<template is="dom-repeat" items="{{mineFeed}}" as="mine">
+			<!-- <div name="[[_computeMine(mine)]]" hidden="true"></div> -->
+		</template>
+		
+
+		<template id="feedList" is="dom-repeat" items="{{mainFeed}}" as="data">
+
+		    <paper-card id="[[assignCtrl(data.id)]]_feedCard" heading="[[_computeTitle(data)]]" image="[[_computeImg(data)]]" class="collection center">
+				<div class="card-content">
+					<!-- <template is="dom-repeat" items="[[_computeData(data)]]" as="item"></template> -->
+				</div>
+		      	<div class="card-actions">
+		      	  	<template  is="dom-if" if="{{canShare}}"><paper-button  on-tap="shareHandler" class="collection"><p id="{{data.id}}_shareBtn" class="linkText">Share</p></paper-button></template>  
+				  	<a href="{{baseUrl}}/geoji/{{data.id}}" hidden="{{_computeExplore(data)}}"><paper-button id="{{data.id}}_exploreBtn" on-tap="exploreHandler" name="{{data.id}}_exploreBtn"><p id="{{data.id}}_exploreLink" class="linkText" class="collection">Explore</p></paper-button></a>
+				  	<a id="{{data.id}}_decryptLink" href="{{baseUrl}}/geoji/{{data.id}}" hidden="{{_computeEncrypted(data)}}"><paper-button id="{{data.id}}_decryptBtn" on-tap="decryptHandler"><p class="linkText">Decrypt</p></paper-button></a>
+		      	</div>
+		    </paper-card>
+		</template>
+
+		<paper-dialog class="decryptData" id="{{assignCtrl('cipherDialog')}}" modal role="alertdialog">
+			<paper-progress class="bar" id="{{assignCtrl('decryptProgress')}}"></paper-progress>
+			<h2>Enter Cipher Key<paper-spinner-lite id="{{assignCtrl('decryptSpinner')}}"  class="center"></paper-spinner-lite></h2>
+			<paper-input-container id="{{assignCtrl('decryptContainer')}}" class="txtData" bind-value="">
+			  <input id="{{assignCtrl('decryptInput')}}" is="iron-input" class="txtData" bind-value="{{cipherKey}}"></input> 
+			</paper-input-container>
+			<paper-button id="{{assignCtrl('cancelDecryptBtn')}}" class="txtData theme" raised on-tap="toggleDecryptDialog">CANCEL</paper-button>
+			<paper-button id="{{assignCtrl('decryptBtn')}}" class="txtData theme" raised on-tap="_decryptGeoji">DECRYPT</paper-button>
+		</paper-dialog>
+
+		<paper-dialog class="decryptData" id="{{assignCtrl('shareDialog')}}" modal role="alertdialog">
+			<h2>Share GEOJI<div class="topCorner"><paper-icon-button suffix class="closeShare" icon="clear" on-tap="closeShare" class="topCorner"></paper-icon-button></div></h2>
+			<paper-input-container id="{{assignCtrl('shareContainer')}}" class="txtData" bind-value="{{shareUrl}}" class="share">
+			  <input id="{{assignCtrl('shareInput')}}" is="iron-input" bind-value="{{shareUrl}}" class="share">
+			  <input id="cipherHidden" is="iron-input" bind-value="{{shareUrl}}" hidden="true">
+			  <paper-input-error>Enter or Generate cipher</paper-input-error>
+			  <paper-icon-button id="{{assignCtrl('shareCopy')}}" suffix icon="content-copy" on-tap="copycipher" class="cut" data-clipboard-action="copy" data-clipboard-target="#cipherHidden"></paper-icon-button> 
+			</paper-input-container>
+		</paper-dialog>
+
+	</template>
+</dom-module>
+
+<script>
+	// I pass the button handler property from the base element, defined as the input
+	// The call back is made via document.querySelector on the input element name.
+	Polymer({
+		is: "geoji-feed",
+		properties: {
+			cardImg: {
+				type: String,
+				value: ""
+			},
+			heading: {
+				type: String,
+				value: "GEOJI"
+			},
+			detail: {
+				type: String,
+				value: ""
+			},
+			description: {
+				type: String,
+				value: ""
+			},
+			canShare: {
+				type: Boolean,
+				value: true
+			},
+			feedURL: {
+				type: String
+			},
+			mineURL: {
+				type: String
+			},
+			privateURL: {
+				type: String
+			},
+			publicURL: {
+				type: String
+			},
+			privateURL: {
+				type: String
+			},
+			mineFeed: {
+				type: Array,
+				value: []
+			},
+			publicFeed: {
+				type: Array,
+				value: []
+			},
+			privateFeed: {
+				type: Array,
+				value: []
+			},
+			mainFeed: {
+				type: Array,
+				value: []
+			},
+			currentLongitude: {
+				type: String,
+				observer: "_locationChange",
+				notify: true
+			},
+			currentLatitude: {
+				type: String,
+				observer: "_locationChange",
+				notify: true
+			},
+			feedReady: {
+				type: Boolean,
+				value: false
+			},
+			shareUrl: {
+				type: String
+			}
+		},
+
+		behaviors: [StyleBehaviors.JStyles, InteractionBehaviors.JHandler, SelectionBehaviors.AutoId,
+			StyleBehaviors.jStyles, InteractionBehaviors.JEvents, UtilityBehaviors.JUtil
+		],
+
+		ready: function() {
+			this.feedReady = true;
+		},
+		attached: function() {
+			var self = this;
+
+			this.uid = app.data.uid;
+
+			setTimeout(function() {
+				var feed = self.getElem(self.ctrls.feed);
+				var location = self.getElem("geoLocation");
+
+				self.currentLongitude = location.longitude;
+				self.currentLatitude = location.latitude;
+
+			}, 2000);
+
+			this._updateLocation();
+
+		},
+		shareHandler: function(e){
+			var shareDialog = this.getElem(this.ctrls.shareDialog);
+			var shareInput = this.getElem(this.ctrls.shareInput);
+			console.log(e);
+			var url = window.location.href;
+			var arr = url.split("/");
+			console.log(arr);
+			var base = arr[0]+"//"+arr[2];
+			var id = e.target.id.replace("_shareBtn", "");
+			console.log(base+"/geoji/"+id);
+			shareInput.value = base+"/geoji/"+id;
+			shareDialog.open();
+		},
+		closeShare: function(){
+			var shareDialog = this.getElem(this.ctrls.shareDialog);
+			shareDialog.close();
+		},
+		decryptHandler: function(){
+			var cipherDialog = this.getElem(this.ctrls.cipherDialog);
+			// cipherDialog.open();
+		},
+		exploreHandler: function(e) {
+			var self = this;
+			var map = this.getElem("mainMap");
+			var id = e.target.name.replace("exploreBtn", "");
+
+		},
+		refresh: function() {
+			this.$.feedList.render();
+		},
+		clearFeed: function() {
+			var feed = this.getElem(this.ctrls.feed);
+			feed.location = "https://geoji.firebaseio.com/feed/";
+			feed.removeByKey(app.data.uid);
+			feed.location = "https://geoji.firebaseio.com/feed/" + app.data.uid;
+
+		},
+		_computeEncrypted: function(data){
+			if(data.encrypted){
+				return false;
+			}else{
+				return true;
+			}
+		},
+		_computeExplore: function(data){
+			if(!data.encrypted){
+				return false;
+			}else{
+				return true;
+			}
+		},
+		_computeData: function(data) {
+			var self = this;
+			setTimeout(function() {
+				var feed = self.getElem(self.ctrls.feed);
+				var feedList = self.getElem("feedList");
+				var arr = [];
+				var lookup = {};
+
+				for (i in self.mainFeed) {
+					lookup[self.mainFeed[i].id] = self.mainFeed[i];
+				}
+
+				if (self._inRange(data)) {
+						if (lookup[data.id] === null || lookup[data.id] === undefined) {
+							if (self._computeMine(data)) {
+								feed.add(data);
+								self.$.feedList.render()
+							} else {
+								feed.removeByKey(data.__firbaseKey__);
+								self.$.feedList.render()
+							}
+						}
+					}
+			}, 2000);
+
+		},
+		_computeMine: function(data) {
+			var self = this;
+			var lookup = {};
+
+			for (i in this.mineFeed) {
+				lookup[this.mineFeed[i].id] = this.mineFeed[i];
+			}
+
+			if (lookup[data.id] === null || lookup[data.id] === undefined) {
+				return true;
+			} else {
+				return false;
+			}
+
+		},
+		_inRange: function(data) {
+			var self = this;
+			var feed = this.getElem(this.ctrls.feed);
+			var feedList = this.getElem(this.ctrls.feedList);
+			var location = this.getElem("geoLocation");
+			var target = data.target;
+			var dist = this.geoDistance(target.latitude, target.longitude, location.latitude, location.longitude, "M");
+			var postDec;
+			if(dist.toString().includes(".")){
+				var postDec = dist.toString().split(".");
+				var chars = postDec[1].split("");
+				var places = [];
+
+				if(dist !== null && dist !== undefined){
+					for (char in chars) {
+						if (parseFloat(chars[char]) !== 0) {
+							break;
+						}
+						places.push(chars[char]);
+					}
+
+					if (places.length >= 2) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}else{
+				return false;
+			}
+			
+
+		},
+		_computeTitle: function(data) {
+			var self = this;
+
+			if (data.title !== null && data.title !== undefined) {
+				if(data.encrypted){
+					return "Encrypted Geoji";
+				}else{
+					return data.title;
+				}
+			} else {
+				return "GEOJI";
+			}
+
+		},
+		_computeImg: function(data) {
+
+			if (data.coverImg !== null && data.coverImg !== undefined) {
+				return data.coverImg;
+			} else {
+				if (data.encrypted === false || data.encrypted === null || data.encrypted === undefined) {
+					return "/images/mascot-default.png";
+				} else if (data.encrypted) {
+					return "/images/mascot-encrypted.png";
+				}
+			}
+		},
+		_locationChange: function() {
+			var self = this;
+			var publicDB = this.getElem(this.ctrls.geojiPublic);
+			var privateDB = this.getElem(this.ctrls.geojiPrivate);
+
+		},
+		_updateLocation: function() {
+			var self = this;
+			var publicDB = this.getElem(this.ctrls.geojiPublic);
+			var privateDB = this.getElem(this.ctrls.geojiPrivate);
+			var feed = this.getElem(this.ctrls.feed);
+			var feedList = this.getElem("feedList");
+			var location = this.getElem("geoLocation");
+
+			setInterval(function() {
+				var feed = self.getElem(self.ctrls.feed);
+				var location = self.getElem("geoLocation");
+
+				self.currentLongitude = location.longitude;
+				self.currentLatitude = location.latitude;
+
+
+				for (i in self.publicFeed) {
+					for (j in self.mainFeed) {
+						if (self.publicFeed[i].id === self.mainFeed[j].id) {
+							if (!self._inRange(self.publicFeed[i])) {
+								feed.remove(self.publicFeed[i]);
+								feedList.render();
+							} else if (self._inRange(self.publicFeed[i])) {
+								self._computeData(self.publicFeed[i]);
+							}
+						}
+					}
+
+				}
+				for (i in self.privateFeed) {
+					for (j in self.mainFeed) {
+						if (self.privateFeed[i].id === self.mainFeed[j].id) {
+							if (!self._inRange(self.privateFeed[i])) {
+								feed.remove(self.privateFeed[i]);
+								feedList.render();
+							} else if (self._inRange(self.privateFeed[i])) {
+								self._computeData(self.privateFeed[i]);
+							}
+						}
+					}
+
+				}
+			}, 3000);
+		}
+
+	});
+</script>
