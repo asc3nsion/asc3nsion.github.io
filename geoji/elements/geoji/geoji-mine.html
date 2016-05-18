@@ -331,13 +331,13 @@ This is an element button used as a base for other buttons.
 
 					if(card !== null && card !== undefined){
 						if (obj.encrypted) {
-							card.image = "/images/mascot-encrypted.png";
+							card.image = app.baseUrl+"/images/mascot-encrypted.png";
 						} else {
 							if (obj.coverImg !== null && obj.coverImg !== undefined) {
 								card.image = obj.coverImg;
 
 							} else {
-								card.image = "/images/mascot-default.png";
+								card.image = app.baseUrl+"/images/mascot-default.png";
 
 							}
 						}
@@ -351,14 +351,14 @@ This is an element button used as a base for other buttons.
 
 					if(card !== null && card !== undefined){
 						if (obj.encrypted) {
-							card.image = "/images/mascot-encrypted.png";
+							card.image = app.baseUrl+"/images/mascot-encrypted.png";
 						} else {
 							if (obj.coverImg !== null && obj.coverImg !== undefined) {
 
 								card.image = obj.coverImg;
 							} else {
 
-								card.image = "/images/mascot-default.png";
+								card.image = app.baseUrl+"/images/mascot-default.png";
 							}
 						}			
 					}

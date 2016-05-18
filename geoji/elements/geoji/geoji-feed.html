@@ -371,9 +371,9 @@ This is an element button used as a base for other buttons.
 				return data.coverImg;
 			} else {
 				if (data.encrypted === false || data.encrypted === null || data.encrypted === undefined) {
-					return "/images/mascot-default.png";
+					return app.baseUrl+"/images/mascot-default.png";
 				} else if (data.encrypted) {
-					return "/images/mascot-encrypted.png";
+					return app.baseUrl+"/images/mascot-encrypted.png";
 				}
 			}
 		},
