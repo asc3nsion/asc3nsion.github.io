@@ -56,7 +56,8 @@ This is an element button used as a base for other buttons.
 		</firebase-collection>
 
 		<template id="mineFeed" is="dom-repeat" items="{{mineData}}" as="data">
-		    <paper-card id="[[assignCtrl(data.id)]]_myCard" heading="[[_computeTitle(data.id)]]" image="[[_computeImg(data.id)]]" class="collection">
+		    <paper-card id="[[assignCtrl(data.id)]]_myCard" heading="[[_computeTitle(data.id)]]" image="" class="collection">
+		    	<div class="topCorner"><img id="[[assignCtrl(data.id)]]_cardProfile" src="" alt="profile" class="cardProfile topCorner"></div>
 				<div class="card-content">
 					<!-- <template is="dom-repeat" items="[[_computeData(data)]]" as="item"></template> -->
 				</div>
@@ -289,9 +290,18 @@ This is an element button used as a base for other buttons.
 						if (obj.encrypted) {
 							card.name = self.ctrls[id] + "_encrypted";
 							card.heading = "Encrypted Geoji";
+							card.image = "/images/mascot-encrypted.png";
+							card.getElementsByClassName("cardProfile")[0].src = obj.profile.profileImg;
 						} else {
 							card.name = self.ctrls[id] + "_decrypted";
 							card.heading = obj.title;
+							card.getElementsByClassName("cardProfile")[0].src = obj.profile.profileImg;
+							if (obj.coverImg !== null && obj.coverImg !== undefined) {
+								card.image = obj.coverImg;
+							} else {
+								card.image = "/images/mascot-default.png";
+
+							}
 						}
 					}
 
@@ -305,64 +315,20 @@ This is an element button used as a base for other buttons.
 						if (obj.encrypted) {
 							card.name = self.ctrls[id] + "_encrypted";
 							card.heading = "Encrypted Geoji";
+							card.image = "/images/mascot-encrypted.png";
+							card.getElementsByClassName("cardProfile")[0].src = obj.profile.profileImg;
 						} else {
 							card.name = self.ctrls[id] + "_decrypted";
 							card.heading = obj.title;
-						}
-					}
-				});
-			}
-
-		},
-		_computeImg: function(id) {
-			var self = this;
-			var publicDB = this.getElem(this.ctrls.geojiPublic);
-			var publicAuth = this.getElem(this.ctrls.publicAuth);
-			var publicRef = publicAuth.ref;
-			var privateDB = this.getElem(this.ctrls.geojiPrivate);
-			var privateAuth = this.getElem(this.ctrls.privateAuth);
-			var privateRef = privateAuth.ref;
-			var mineDB = this.getElem(this.ctrls.geojiMine);
-
-			if (id !== null && id !== undefined) {
-				publicRef.orderByChild("id").equalTo(id).on("child_added", function(snapshot) {
-					var obj = snapshot.val();
-					var card = self.getElem(self.ctrls[id] + "_myCard");
-
-					if(card !== null && card !== undefined){
-						if (obj.encrypted) {
-							card.image = app.baseUrl+"/images/mascot-encrypted.png";
-						} else {
+							card.getElementsByClassName("cardProfile")[0].src = obj.profile.profileImg;
 							if (obj.coverImg !== null && obj.coverImg !== undefined) {
 								card.image = obj.coverImg;
-
 							} else {
-								card.image = app.baseUrl+"/images/mascot-default.png";
+								card.image = "/images/mascot-default.png";
 
 							}
 						}
 					}
-
-				});
-
-				privateRef.orderByChild("id").equalTo(id).on("child_added", function(snapshot) {
-					var obj = snapshot.val();
-					var card = self.getElem(self.ctrls[id] + "_myCard");
-
-					if(card !== null && card !== undefined){
-						if (obj.encrypted) {
-							card.image = app.baseUrl+"/images/mascot-encrypted.png";
-						} else {
-							if (obj.coverImg !== null && obj.coverImg !== undefined) {
-
-								card.image = obj.coverImg;
-							} else {
-
-								card.image = app.baseUrl+"/images/mascot-default.png";
-							}
-						}			
-					}
-
 				});
 			}
 

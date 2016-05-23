@@ -93,23 +93,37 @@ paper-icon-button.createMarker #icon {
  	width: 80%;
  }
  paper-dialog.txtData{
-
- 	width: 35vw;
- 	height: 55%;
- 	font-size: 1.8vw;
+	width: 75vw;
+ 	height: 50%;
+ 	max-height: 500px;
+    min-height: 150px;
+	max-width: 300px;
+    min-width: 100px;
+ 	font-size: 1vw;
+ }
+ paper-button.txtData{
+	width: 25%;
+ 	height: 10%;
+ 	max-height: 100px;
+    min-height: 50px;
+	max-width: 300px;
+    min-width: 100px;
+ 	float: right;
+ 	margin: 3% 1% 1% 1%;
+ }
+ text-area.txtData{
+	width: 75vw;
+ 	height: 50%;
+ 	max-height: 500px;
+    min-height: 150px;
+	max-width: 300px;
+    min-width: 100px;
+ 	font-size: 25%;
  }
  paper-dialog.decryptData{
 
  	width: 45vw;
  	height: 25%;
- }
- paper-button.txtData{
-
- 	float: right;
- 	margin: 50px 10px 10px 10px;
- 	font-size: 1.8vw;
- 	position:relative;
-
  }
  paper-dialog.imgData{
 
@@ -182,18 +196,24 @@ paper-icon-button.createMarker #icon {
 			  <input id="{{assignCtrl('title')}}" class="createMarker" is="iron-input" bind-value="{{title}}">
 			  <paper-icon-button suffix icon="clear"></paper-icon-button>
 			</paper-input-container>
-			<paper-input-container class="createMarker">
-			  <label>Date</label>
-			  <input id="{{assignCtrl('date')}}" class="createMarker" is="iron-input" bind-value="{{date}}">
+			<paper-input-container class="inlineOneEighth">
+			  <label>Start</label>
+			  <input id="{{assignCtrl('date')}}" type="text" class="inlineOneEighth" is="iron-input" bind-value="{{date}}">
 			  <paper-icon-button suffix icon="arrow-drop-down-circle" on-tap="setDate"></paper-icon-button>
 			</paper-input-container>
+			<paper-input-container class="inlineOneEighth">
+			  <label>End</label>
+			  <input id="{{assignCtrl('end')}}" type="text" class="inlineOneEighth" is="iron-input" bind-value="{{end}}">
+			  <paper-icon-button suffix icon="arrow-drop-down-circle" on-tap="setEnd"></paper-icon-button>
+			</paper-input-container>
+			<div class="inlineBlock left3pct"><paper-toggle-button id="{{assignCtrl('includeProfile')}}" checked="{{include}}">Use Profile</paper-toggle-button></div>
 
 		  <div class="card-content">
 		  <div id="{{assignCtrl('containerPrivate')}}">
 		  	<paper-toggle-button id="{{assignCtrl('public')}}"  checked="{{private}}">Private</paper-toggle-button>
 		  	<paper-input-container id="{{assignCtrl('email')}}" class="createMarkerData" bind-value="{{emailValue}}" hidden="true">
 			  <label>Add Email</label>
-			  <input id="{{assignCtrl('emailInput')}}" is="iron-input" type="email" autocomplete="on" bind-value="">
+			  <input id="{{assignCtrl('emailInput')}}" autocomplete="on" type="email" is="iron-input" type="email" autocomplete="on" bind-value="">
 			  <paper-input-error>Enter a valid email!</paper-input-error>
 			  <paper-icon-button suffix icon="add" on-tap="addEmail"></paper-icon-button>
 			</paper-input-container>
@@ -202,8 +222,8 @@ paper-icon-button.createMarker #icon {
 		  	<paper-toggle-button id="{{assignCtrl('encrypt')}}" checked="{{encrypted}}">Encrypt</paper-toggle-button>
 		  	<paper-input-container id="{{assignCtrl('cipher')}}" class="createMarkerData" bind-value="{{emailValue}}" hidden="true">
 			  <label>Cipher Key</label>
-			  <input id="{{assignCtrl('cipherInput')}}" is="iron-input" bind-value="{{cipherKey}}">
-			  <input id="cipherHidden" is="iron-input" bind-value="{{cipherKey}}" hidden="true">
+			  <input id="{{assignCtrl('cipherInput')}}" type="text" is="iron-input" bind-value="{{cipherKey}}">
+			  <input id="cipherHidden" is="iron-input" type="text" bind-value="{{cipherKey}}" hidden="true">
 			  <paper-input-error>8 characters minimum, with at least 1 capital, 1 number, and 1 symbol.</paper-input-error>
 			  <paper-icon-button suffix icon="autorenew" on-tap="createcipher"></paper-icon-button>
 			  <paper-icon-button id="{{assignCtrl('cipherCopy')}}" suffix icon="content-copy" on-tap="copycipher" class="cut" data-clipboard-action="copy" data-clipboard-target="#cipherHidden" hidden="true"></paper-icon-button>
@@ -241,8 +261,8 @@ paper-icon-button.createMarker #icon {
 		<paper-dialog class="txtData" id="{{assignCtrl('txtDialog')}}" modal role="alertdialog">
 			<h2>Geoji Message</h2>
 			<paper-icon-button suffix class="closeDialog" icon="clear" on-tap=""></paper-icon-button>
-			<paper-input-container id="{{assignCtrl('txtContainer')}}" class="txtData" bind-value="">
-			  <textarea id="{{assignCtrl('txtInput')}}" class="txtData" rows="10" cols="30"></textarea> 
+			<paper-input-container id="{{assignCtrl('txtContainer')}}" type="text" class="txtData" bind-value="">
+			  <textarea id="{{assignCtrl('txtInput')}}" class="txtData" rows="5" cols="15"></textarea> 
 			</paper-input-container>
 			<paper-button id="{{assignCtrl('cancelTxt')}}" class="txtData theme" raised on-tap="toggleTxtDialog">CANCEL</paper-button>
 			<paper-button id="{{assignCtrl('saveTxt')}}" class="txtData theme" raised on-tap="saveTxt">SAVE</paper-button>
@@ -265,7 +285,6 @@ paper-icon-button.createMarker #icon {
 			hideButtons="false"
 			handleDialog="{{getCtrlId('imgDialog')}}"
 			parentElement="{{getCtrlId('imgDialog')}}"
-			progressSpinner="{{getCtrlId('imgSpinner')}}"
 			></j-img-process>
 		</paper-dialog>
 
@@ -276,11 +295,11 @@ paper-icon-button.createMarker #icon {
 			<paper-spinner-lite id="{{assignCtrl('vidSpinner')}}"  class="orange inlineBlock"></paper-spinner-lite>
 			<paper-input-container id="{{assignCtrl('vidTitle')}}" class="vidInput" bind-value="{{vidTitle}}">
 			  <label>Title</label>
-			  <input id="{{assignCtrl('vidTitleInput')}}" is="iron-input" bind-value="">
+			  <input id="{{assignCtrl('vidTitleInput')}}" type="text" is="iron-input" bind-value="">
 			</paper-input-container>
 			<paper-input-container id="{{assignCtrl('vidUrl')}}" class="vidInput unselectable" bind-value="{{vidTitle}}">
 			  <label>Link</label>
-			  <input id="{{assignCtrl('vidUrlInput')}}" is="iron-input" bind-value="{{vidUrl}}">
+			  <input id="{{assignCtrl('vidUrlInput')}}" type="text" is="iron-input" bind-value="{{vidUrl}}">
 			</paper-input-container>
 			<div id="{{assignCtrl('vidImgs')}}">
 				<iron-icon id="{{assignCtrl('vidIcon')}}" icon="geoji-icons:mascot-img-icon" class="createMarker"></iron-icon>
@@ -314,7 +333,7 @@ paper-icon-button.createMarker #icon {
 			<paper-progress class="bar" id="{{assignCtrl('decryptProgress')}}"></paper-progress>
 			<h2>Enter Cipher Key<paper-spinner-lite id="{{assignCtrl('decryptSpinner')}}"  class="center"></paper-spinner-lite></h2>
 			<paper-input-container id="{{assignCtrl('decryptContainer')}}" class="txtData" bind-value="">
-			  <input id="{{assignCtrl('decryptInput')}}" is="iron-input" class="txtData" bind-value="{{cipherKey}}"></input> 
+			  <input id="{{assignCtrl('decryptInput')}}" is="iron-input" type="text" class="txtData" bind-value="{{cipherKey}}"></input> 
 			</paper-input-container>
 			<paper-button id="{{assignCtrl('cancelDecryptBtn')}}" class="txtData theme" raised on-tap="toggleDecryptDialog">CANCEL</paper-button>
 			<paper-button id="{{assignCtrl('decryptBtn')}}" class="txtData theme" raised on-tap="_decryptGeoji">DECRYPT</paper-button>
@@ -324,6 +343,13 @@ paper-icon-button.createMarker #icon {
 			<paper-card>
 		  		<div class="topCorner"><paper-icon-button suffix class="closeDialog" icon="clear" on-tap="closeDate" class="topCorner"></paper-icon-button></div>
 		  		<jv-datepicker id="{{assignCtrl('datePicker')}}" class="top10" date={{date}} modal></jv-datepicker>
+			</paper-card>
+		</paper-dialog>
+
+		<paper-dialog class="endData" id="{{assignCtrl('endDialog')}}" modal role="alertdialog">
+			<paper-card>
+		  		<div class="topCorner"><paper-icon-button suffix class="closeDialog" icon="clear" on-tap="closeEnd" class="topCorner"></paper-icon-button></div>
+		  		<jv-datepicker id="{{assignCtrl('endPicker')}}" class="top10" date={{end}} modal></jv-datepicker>
 			</paper-card>
 		</paper-dialog>
 
@@ -355,6 +381,12 @@ paper-icon-button.createMarker #icon {
 				observer: "_setEncrypted",
 				notify: true
 			},
+			include: {
+				type: Boolean,
+				value: false,
+				observer: "_setInclude",
+				notify: true
+			},
 			cardImg: {
 				type: String,
 				value: ""
@@ -368,6 +400,9 @@ paper-icon-button.createMarker #icon {
 				value: ""
 			},
 			date: {
+				type: String
+			},
+			end: {
 				type: String
 			},
 			coverSet: {
@@ -511,6 +546,7 @@ paper-icon-button.createMarker #icon {
 			var add = this.getElem(this.ctrls.add);
 			var save = this.getElem(this.ctrls.save);
 			var date = this.getElem(this.ctrls.datePicker);
+			var end = this.getElem(this.ctrls.endPicker);
 
 			var publicDB = this.getElem(this.ctrls.geojiPublic);
 			var publicAuth = this.getElem(this.ctrls.publicAuth);
@@ -603,8 +639,13 @@ paper-icon-button.createMarker #icon {
 
 			setTimeout(function() {
 
+				var map = self.getElem(self.ctrls.map);
 				var location = self.getElem("geoLocation");
 				var pos;
+				var profile = {};
+
+				profile.name = "unknown";
+				profile.profileImg = "/images/mascot-unknown.png";
 
 				if(location.latitude === null || location.latitude === undefined){
 					if (navigator.geolocation) {
@@ -627,6 +668,8 @@ paper-icon-button.createMarker #icon {
 				targetObj.latitude = self.currentLatitude;
 				self.geoji.id = self.generateUid("_");
 				self.geoji.date = self.date;
+				self.geoji.end = self.end;
+				self.geoji.profile = profile;
 
 				self.currentLongitude = location.longitude;
 				self.currentLatitude = location.latitude;
@@ -637,7 +680,7 @@ paper-icon-button.createMarker #icon {
 				mine.location = "https://geoji.firebaseio.com/mine/" + app.data.uid;
 				mineAuth.location = "https://geoji.firebaseio.com/mine/" + app.data.uid;
 				map["api-key"] = "AIzaSyCgmlzQ8iH-U2KDt2mhXJbZvQm-KB5dWSo";
-				// map.resize();
+				map.resize();
 
 			}, 1000);
 
@@ -774,6 +817,22 @@ paper-icon-button.createMarker #icon {
 
 			dialog.close();
 			date.enforceDateChange();
+			this.geoji.date = this.date;
+
+		},
+		setEnd: function() {
+			var dialog = this.getElem(this.ctrls.endDialog);
+
+			dialog.open();
+
+		},
+		closeEnd: function() {
+			var dialog = this.getElem(this.ctrls.endDialog);
+			var end = this.getElem(this.ctrls.endPicker);
+
+			dialog.close();
+			end.enforceDateChange();
+			this.geoji.end = this.end;
 
 		},
 		saveGeoji: function() {
@@ -1149,7 +1208,7 @@ paper-icon-button.createMarker #icon {
 			target.draggable = true;
 			target.animation = "DROP";
 
-			target.icon = "geoji/images/marker-target.png";
+			target.icon = "/images/marker-target.png";
 
 			var onClick = function(e) {
 				//console.log(e);
@@ -1161,8 +1220,6 @@ paper-icon-button.createMarker #icon {
 					if (data !== undefined || data !== null) {
 						self.geoji.target.longitude = e.target.longitude;
 						self.geoji.target.latitude = e.target.latitude;
-
-						//console.log(self.geoji);
 					}
 				}, 50);
 
@@ -1186,11 +1243,11 @@ paper-icon-button.createMarker #icon {
 
 			if (typeof long === "number") {
 				marker = this.loadMarker(long, lat, id);
-				marker.icon = app.baseUrl+"/images/mascot-txt.png";
+				marker.icon = "/images/mascot-txt.png";
 				doUpdate = false;
 			} else {
 				marker = this.createMarker();
-				marker.icon = app.baseUrl+"/images/mascot-txt.png";
+				marker.icon = "/images/mascot-txt.png";
 			}
 
 			var onClick = function(e) {
@@ -1252,11 +1309,11 @@ paper-icon-button.createMarker #icon {
 
 			if (typeof long === "number") {
 				marker = this.loadMarker(long, lat, id);
-				marker.icon = app.baseUrl+"/images/mascot-img.png";
+				marker.icon = "/images/mascot-img.png";
 				doUpdate = false;
 			} else {
 				marker = this.createMarker();
-				marker.icon = app.baseUrl+"/images/mascot-img.png";
+				marker.icon = "/images/mascot-img.png";
 			}
 
 			var onClick = function(e) {
@@ -1319,11 +1376,11 @@ paper-icon-button.createMarker #icon {
 
 			if (typeof long === "number") {
 				marker = this.loadMarker(long, lat, id);
-				marker.icon = app.baseUrl+"/images/mascot-vid.png";
+				marker.icon = "/images/mascot-vid.png";
 				doUpdate = false;
 			} else {
 				marker = this.createMarker();
-				marker.icon = app.baseUrl+"/images/mascot-vid.png";
+				marker.icon = "/images/mascot-vid.png";
 			}
 
 			var onClick = function(e) {
@@ -1666,9 +1723,6 @@ paper-icon-button.createMarker #icon {
 				}
 			}
 
-			console.log(i);
-			console.log(cipher);
-
 			if(cipher !== null && cipher !== undefined && cipher !== "undefined" && cipher !== ""){
 				if (gKeys.length === eKeys.length) {
 					var publicDB = this.getElem(this.ctrls.geojiPublic);
@@ -1720,6 +1774,14 @@ paper-icon-button.createMarker #icon {
 								console.log("id isnt defined.");
 							}
 							break;
+						case "profile":
+							if (self.geoji.profile !== null && self.geoji.profile !== undefined) {
+								self.geojiEncrypted.profile = self.geoji.profile;
+								self.encrypt_MainObj(i + 1, cipher);
+							}else{
+								console.log("id isnt defined.");
+							}
+							break;
 						case "title":
 							console.log("encrypt title");
 							self.encrypt_MainKey(keys[i], self.geoji.title, cipher, i);
@@ -1727,6 +1789,14 @@ paper-icon-button.createMarker #icon {
 						case "date":
 							if (self.geoji.date !== null && self.geoji.date !== undefined) {
 								self.geojiEncrypted.date = self.geoji.date;
+								self.encrypt_MainObj(i + 1, cipher);
+							}else{
+								console.log("date isnt defined.");
+							}
+							break;
+						case "end":
+							if (self.geoji.end !== null && self.geoji.end !== undefined) {
+								self.geojiEncrypted.end = self.geoji.end;
 								self.encrypt_MainObj(i + 1, cipher);
 							}else{
 								console.log("date isnt defined.");
@@ -1793,7 +1863,6 @@ paper-icon-button.createMarker #icon {
 		decrypt_MainObj: function(i, cipher) {
 			var self = this;
 			this.geoji = this.decryptedObj;
-			console.log(this.encryptedObj);
 			var keys = Object.keys(self.encryptedObj);
 			var dKeys = Object.keys(self.decryptedObj);
 			var eKeys = Object.keys(self.encryptedObj);
@@ -1841,6 +1910,12 @@ paper-icon-button.createMarker #icon {
 							self.decrypt_MainObj(i + 1, this.cipherKey);
 						}
 						break;
+					case "profile":
+						if (self.encryptedObj.profile !== null && self.encryptedObj.profile !== undefined) {
+							self.decryptedObj.profile = self.encryptedObj.id;
+							self.decrypt_MainObj(i + 1, this.cipherKey);
+						}
+						break;
 					case "title":
 						console.log("decrypt title");
 
@@ -1849,6 +1924,12 @@ paper-icon-button.createMarker #icon {
 					case "date":
 						if (self.encryptedObj.date !== null && self.encryptedObj.date !== undefined) {
 							self.decryptedObj.date = self.encryptedObj.date;
+							self.decrypt_MainObj(i + 1, this.cipherKey);
+						}
+						break;
+					case "end":
+						if (self.encryptedObj.end !== null && self.encryptedObj.end !== undefined) {
+							self.decryptedObj.end = self.encryptedObj.end;
 							self.decrypt_MainObj(i + 1, this.cipherKey);
 						}
 						break;
@@ -1972,6 +2053,25 @@ paper-icon-button.createMarker #icon {
 				}
 			}
 		},
+		_setInclude: function() {
+			var profile = {};
+
+			if(this.geoji !== null && this.geoji !== undefined
+				&& this.include !== null && this.include !== undefined){
+
+				if(this.include){
+					profile.name = app.data.userName;
+					profile.profileImg = app.data.profileImg;
+					this.geoji.profile = profile;
+				}else{
+					profile.name = "unknown";
+					profile.profileImg = "/images/mascot-unknown.png";
+					this.geoji.profile = profile;
+				}
+
+				console.log(app.data);
+			}
+		},
 		_setCoverImg: function() {
 
 			if (this.coverSet === true) {
@@ -1999,8 +2099,6 @@ paper-icon-button.createMarker #icon {
 			if(cipher !== null && cipher !== undefined
 			 && input !== null && input !== undefined
 			 && this.cipherKey !== null && this.cipherKey !== undefined){
-			 	console.log("HAHAHAHAHAHA");
-			 	console.log(re.test(this.cipherKey));
 				cipher.invalid = !re.test(this.cipherKey);
 			}
 

@@ -7,6 +7,7 @@ This is an element button for google auth using firebase api
 <link rel="import" href="../../bower_components/firebase-element/firebase-document.html">
 <link rel="import" href="../../bower_components/firebase-element/firebase-collection.html">
 <link rel="import" href="login-btn.html">
+<link rel="import" href="../../behaviors/selection/auto-id.html">
 
 <dom-module id= "geo-login">
   <template >
@@ -62,8 +63,7 @@ This is an element button for google auth using firebase api
           <paper-tab><iron-icon icon="social:person-add"></iron-icon></paper-tab>
         </paper-tabs>
         <iron-pages selected="0">
-            <div>
-            
+            <div>     
              <ul>
                   <li class="center-horiz">
 
@@ -98,10 +98,18 @@ This is an element button for google auth using firebase api
             <div>
                 <ul>
                   <li class="center-horiz">
-                    <input placeholder="email" value="{{email::input}}">></input>
+                    <paper-input-container id="{{assignCtrl('emailContainer')}}">
+                      <input id="{{assignCtrl('emailInput')}}" type="email" autocomplete="on"  placeholder="email" value="{{email::input}}" name="email" bind-value="{{email}}" autofocus="true">></input>
+                      <label for="{{getCtrl('emailInput')}}"></label>
+                      <paper-input-error>{{emailError}}</paper-input-error>
+                    </paper-input-container>
                   </li>
                   <li class="center-horiz">
-                    <input type="password" placeholder="password" value="{{password::input}}"></input>
+                    <paper-input-container id="{{assignCtrl('passwordContainer')}}">
+                      <input id="{{assignCtrl('passwordInput')}}"  type="password" autocomplete="on" placeholder="password" value="{{password::input}}" name="password" bind-value="{{password}}"></input>
+                      <label for="{{getCtrl('passwordInput')}}"></label>
+                      <paper-input-error>{{passwordError}}</paper-input-error>
+                    </paper-input-container>
                   </li>
                   <li class="center-horiz">
                     <login-btn 
@@ -117,19 +125,30 @@ This is an element button for google auth using firebase api
             <div>
                 <ul>
                   <li class="center-horiz">
-                    <input placeholder="email"></input>
+                    <paper-input-container id="{{assignCtrl('regNameContainer')}}">
+                      <input id="{{assignCtrl('regNameInput')}}" type="text" autocomplete="on" placeholder="name" name="registerName" bind-value="{{name}}" autofocus="true" required="true"></input>
+                      <label for="{{getCtrl('regNameInput')}}"></label>
+                    </paper-input-container>
                   </li>
                   <li class="center-horiz">
-                    <input type="password" placeholder="password"></input>
+                    <paper-input-container id="{{assignCtrl('regEmailContainer')}}">
+                      <input id="{{assignCtrl('regEmailInput')}}" type="email" autocomplete="on" placeholder="email" name="registerEmail" value="{{email::input}}" bind-value="{{email}}"></input>
+                      <label for="{{getCtrl('regEmailInput')}}"></label>
+                      <paper-input-error>{{emailError}}</paper-input-error>
+                    </paper-input-container>
                   </li>
                   <li class="center-horiz">
-                    <input type="password" placeholder="confirm pw"></input>
+                    <paper-input-container id="{{assignCtrl('regPasswordContainer')}}">
+                      <input id="{{assignCtrl('regPasswordInput')}}" type="password" autocomplete="on" placeholder="password" name="registerPassword" value="{{password::input}}" bind-value="{{password}}"></input>
+                      <label for="{{getCtrl('regPasswordInput')}}"></label>
+                      <paper-input-error>{{passwordError}}</paper-input-error>
+                    </paper-input-container>
                   </li>
                   <li class="center-horiz">
                     <login-btn 
                       styles="{{btnStyles}}"
                       input="{{getId()}}"
-                      handler="btnHandler"
+                      handler="register"
                       provider="REGISTER"
                       basic="true"
                       ></login-btn>
@@ -167,13 +186,32 @@ addEventListener('WebComponentsReady', function() {
         type: String,
         value: ""
       },
+      name:{
+        type: String
+      },
       email:{
         type: String,
-        value: ""
+        value: "",
+        observer: "_validateEmail",
+        notify: true
       },
       password:{
         type: String,
-        value: ""
+        value: "",
+        observer: "_validatePassword",
+        notify: true
+      },
+      passwordError:{
+        type: String,
+        value: "8 characters minimum, with at least 1 capital, 1 number, and 1 symbol."
+      },
+      confirmError:{
+        type: String,
+        value: "emails dont match."
+      },
+      emailError:{
+        type: String,
+        value: "Please enter valid email address."
       },
       user:{
         type: Object,
@@ -216,21 +254,28 @@ addEventListener('WebComponentsReady', function() {
     },
     login: function(provider){
       var params;
+      var regEmailContainer = this.getElem(this.ctrls.regEmailContainer);
+      var regPwContainer = this.getElem(this.ctrls.regPasswordContainer);
       this.provider = provider;
 
       switch(provider){
         case "password":
           console.log("do a user login.");
-          params = params || {};
-          params.email = this.email;
-          params.password = this.password;
-          this.$.firebaseLogin.login(params);
-          console.log(this.$.firebaseLogin.user);
+          if(regEmailContainer.invalid === false && regPwContainer.invalid === false){
+            params = params || {};
+            params.name = this.name;
+            params.email = this.email;
+            params.password = this.password;
+            this.$.firebaseLogin.login(params);
+            console.log(this.$.firebaseLogin.user);
+          }else{
+            console.log("invalid credentials");
+          }
           break;
         case "google":
           console.log("do a google log in.");
           params = params || {};
-          params.scope = "email https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload";
+          params.scope = "email https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly";
 
           this.$.firebaseLogin.login(params);
 
@@ -243,6 +288,30 @@ addEventListener('WebComponentsReady', function() {
           break;
       }
 
+    },
+    register: function(){
+      var regnameContainer = this.getElem(this.ctrls.regNameContainer);
+      var nameInput = this.getElem(this.ctrls.regNameInput);
+      var regEmailContainer = this.getElem(this.ctrls.regEmailContainer);
+      var regPwContainer = this.getElem(this.ctrls.regPasswordContainer);
+
+      if(regEmailContainer.invalid === false && regPwContainer.invalid === false){
+        if(regEmailContainer.invalid === false && regPwContainer.invalid === false
+          && nameInput.value !== null && nameInput !== undefined && nameInput !== ""){
+            params = params || {};
+            params.name = this.name;
+            params.email = this.email;
+            params.password = this.password;
+            this.$.firebaseLogin.login(params);
+            console.log(this.$.firebaseLogin.user);
+          }else{
+            console.log("invalid credentials");
+          }
+      }else{
+        console.log("invalid credentials");
+      }
+
+      console.log("do register");
     },
     authCallBack: function(){
       var data = {};
@@ -258,7 +327,10 @@ addEventListener('WebComponentsReady', function() {
         if(this.userData.customName !== undefined){
           app.data.userName = this.userData.customName;
         }else{
-          app.data.userName = this.userData.name;
+          if(this.userData.name !== null && this.userData.name !== undefined && this.userData.name !== ""
+            && this.userData.uid === null || this.userData.uid === undefined){
+            app.data.userName = this.userData.name;
+          }
         }
         if(this.userData.customProfileImg !== undefined){
           app.data.profileImg = this.userData.customProfileImg;
@@ -274,6 +346,7 @@ addEventListener('WebComponentsReady', function() {
           var feed = app.element("geoFeed");
           var mineSection = app.element("mainCollection");
           var mine = app.element("geoMine");
+
           if(feed!==null&&feed!==undefined){
             feed.publicURL = "https://geoji.firebaseio.com/public/";
             feed.privateURL = "https://geoji.firebaseio.com/private/";
@@ -283,8 +356,10 @@ addEventListener('WebComponentsReady', function() {
           if(mine!==null&&mine!==undefined){
             mine.mineURL = "https://geoji.firebaseio.com/mine/"+app.data.uid;
           }
-    
-        app.launch();
+
+          app.data.userName = this.userData.name;
+
+          app.launch();
       }
     },
     getLoggedIn : function(){
@@ -295,7 +370,7 @@ addEventListener('WebComponentsReady', function() {
       if (this.provider === "password"){
         data.name = "unknown";
         data.email = this.user.password.email;
-        data.profileImg = this.$.firebasLogin.user.password.profileImageURL;
+        data.profileImg = "/images/mascot-unknown.png";
       }else if (this.provider === "google"){
         data.name = this.$.firebaseLogin.user.google.displayName;
         data.email = this.$.firebaseLogin.user.google.email;
@@ -366,7 +441,79 @@ addEventListener('WebComponentsReady', function() {
       var pages = document.querySelector('iron-pages');
       var tabs = document.querySelector('paper-tabs');
       pages.selected = tabs.selected;
-    }
+    },
+    _validateEmail: function() {
+      var input = this.getElem(this.ctrls.emailInput);
+      var regInput = this.getElem(this.ctrls.regEmailInput);
+      var emailContainer = this.getElem(this.ctrls.emailContainer);
+      var regEmailContainer = this.getElem(this.ctrls.regEmailContainer);
+
+      var inputs = [input, regInput];
+
+      if (emailContainer !== null && input !== null
+        && regEmailContainer !== null && regInput !== null) {
+
+        var active;
+
+        for(i in inputs){
+          if(inputs[i] === document.activeElement){
+            active = inputs[i];
+          }
+        }
+
+        if(active !== null && active !== undefined){
+          if (active.value.includes('@') && active.value.includes('.')) {
+            if(active.name === "email"){
+              emailContainer.invalid = false;
+            }else if(active.name === "registerEmail"){
+              regEmailContainer.invalid = false;
+            }
+          } else {
+            if(active.name === "email"){
+              emailContainer.invalid = true;
+            }else if(active.name === "registerEmail"){
+              regEmailContainer.invalid = true;
+            }
+          }
+        }
+      }
+    },
+    _validatePassword: function(){
+      var pwContainer = this.getElem(this.ctrls.passwordContainer);
+      var regPwContainer = this.getElem(this.ctrls.regPasswordContainer);
+      var confirmPwContainer = this.getElem(this.ctrls.confirmPasswordContainer);
+      var pwInput = this.getElem(this.ctrls.passwordInput);
+      var regPwInput = this.getElem(this.ctrls.regPasswordInput);
+      var confirmPwInput = this.getElem(this.ctrls.confirmPasswordInput);
+
+      var inputs = [pwInput, regPwInput, confirmPwInput];
+
+      var re = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
+
+      if(pwContainer !== null && pwContainer !== undefined
+        && regPwContainer !== null && regPwContainer !== undefined){
+
+        var input;
+
+        for(i in inputs){
+          if(inputs[i] === document.activeElement){
+            input = inputs[i];
+          }
+        }
+
+        if(input !== null && input !== undefined){
+          switch(input.name){
+            case "password":
+              pwContainer.invalid = !re.test(this.password);
+              break;
+            case "registerPassword":
+              regPwContainer.invalid = !re.test(this.password);
+              break;
+          }
+        }
+      }
+
+    },
   });
 });
   

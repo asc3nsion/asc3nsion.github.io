@@ -40,6 +40,12 @@ This is an element button used as a base for other buttons.
 	p.linkText {
 		font-size: 2vw;
 	}
+
+	img.cardProfile {
+		max-width: 5%;
+      	min-width: 75px;
+      	margin: 8px;
+	}
 	
 
 </style>	
@@ -82,19 +88,12 @@ This is an element button used as a base for other buttons.
 
 		<template is="dom-repeat" items="{{privateFeed}}" as="private">
 			<div name="[[_computeData(private)]]" hidden="true"></div>
-		</template>
-
-		<template is="dom-repeat" items="{{mineFeed}}" as="mine">
-			<!-- <div name="[[_computeMine(mine)]]" hidden="true"></div> -->
-		</template>
-		
+		</template>	
 
 		<template id="feedList" is="dom-repeat" items="{{mainFeed}}" as="data">
 
 		    <paper-card id="[[assignCtrl(data.id)]]_feedCard" heading="[[_computeTitle(data)]]" image="[[_computeImg(data)]]" class="collection center">
-				<div class="card-content">
-					<!-- <template is="dom-repeat" items="[[_computeData(data)]]" as="item"></template> -->
-				</div>
+		    	<div class="topCorner"><img id="[[assignCtrl(data.id)]]_cardProfile" src="[[data.profile.profileImg]]" alt="profile" class="cardProfile topCorner"></div>
 		      	<div class="card-actions">
 		      	  	<template  is="dom-if" if="{{canShare}}"><paper-button  on-tap="shareHandler" class="collection"><p id="{{data.id}}_shareBtn" class="linkText">Share</p></paper-button></template>  
 				  	<a href="{{baseUrl}}/geoji/{{data.id}}" hidden="{{_computeExplore(data)}}"><paper-button id="{{data.id}}_exploreBtn" on-tap="exploreHandler" name="{{data.id}}_exploreBtn"><p id="{{data.id}}_exploreLink" class="linkText" class="collection">Explore</p></paper-button></a>
@@ -107,7 +106,8 @@ This is an element button used as a base for other buttons.
 			<paper-progress class="bar" id="{{assignCtrl('decryptProgress')}}"></paper-progress>
 			<h2>Enter Cipher Key<paper-spinner-lite id="{{assignCtrl('decryptSpinner')}}"  class="center"></paper-spinner-lite></h2>
 			<paper-input-container id="{{assignCtrl('decryptContainer')}}" class="txtData" bind-value="">
-			  <input id="{{assignCtrl('decryptInput')}}" is="iron-input" class="txtData" bind-value="{{cipherKey}}"></input> 
+			  <input id="{{assignCtrl('decryptInput')}}" type="url" is="iron-input" class="txtData" bind-value="{{cipherKey}}"></input>
+			  <label for="{{getCtrl('decryptInput')}}">decrypt</label> 
 			</paper-input-container>
 			<paper-button id="{{assignCtrl('cancelDecryptBtn')}}" class="txtData theme" raised on-tap="toggleDecryptDialog">CANCEL</paper-button>
 			<paper-button id="{{assignCtrl('decryptBtn')}}" class="txtData theme" raised on-tap="_decryptGeoji">DECRYPT</paper-button>
@@ -116,11 +116,17 @@ This is an element button used as a base for other buttons.
 		<paper-dialog class="decryptData" id="{{assignCtrl('shareDialog')}}" modal role="alertdialog">
 			<h2>Share GEOJI<div class="topCorner"><paper-icon-button suffix class="closeShare" icon="clear" on-tap="closeShare" class="topCorner"></paper-icon-button></div></h2>
 			<paper-input-container id="{{assignCtrl('shareContainer')}}" class="txtData" bind-value="{{shareUrl}}" class="share">
-			  <input id="{{assignCtrl('shareInput')}}" is="iron-input" bind-value="{{shareUrl}}" class="share">
+			  <input id="{{assignCtrl('shareInput')}}" type="text" is="iron-input" bind-value="{{shareUrl}}" class="share">
+			  <label for="{{getCtrl('shareInput')}}">share</label>
 			  <input id="cipherHidden" is="iron-input" bind-value="{{shareUrl}}" hidden="true">
 			  <paper-input-error>Enter or Generate cipher</paper-input-error>
 			  <paper-icon-button id="{{assignCtrl('shareCopy')}}" suffix icon="content-copy" on-tap="copycipher" class="cut" data-clipboard-action="copy" data-clipboard-target="#cipherHidden"></paper-icon-button> 
 			</paper-input-container>
+		</paper-dialog>
+
+		<paper-dialog class="decryptData" id="{{assignCtrl('cardProfileDialog')}}" modal role="alertdialog">
+			<h2>Created By<div class="topCorner"><paper-icon-button suffix class="closeShare" icon="clear" on-tap="closeShare" class="topCorner"></paper-icon-button></div></h2>
+			<img id="{{assignCtrl('cardProfileImg')}}" src="" alt="">
 		</paper-dialog>
 
 	</template>
@@ -326,6 +332,7 @@ This is an element button used as a base for other buttons.
 			var target = data.target;
 			var dist = this.geoDistance(target.latitude, target.longitude, location.latitude, location.longitude, "M");
 			var postDec;
+
 			if(dist.toString().includes(".")){
 				var postDec = dist.toString().split(".");
 				var chars = postDec[1].split("");
@@ -366,16 +373,20 @@ This is an element button used as a base for other buttons.
 
 		},
 		_computeImg: function(data) {
-			console.log("WHAHAHAHAAH");
 
 			if (data.coverImg !== null && data.coverImg !== undefined) {
 				return data.coverImg;
 			} else {
 				if (data.encrypted === false || data.encrypted === null || data.encrypted === undefined) {
-					return app.baseUrl+"/images/mascot-default.png";
+					return "/images/mascot-default.png";
 				} else if (data.encrypted) {
-					return app.baseUrl+"/images/mascot-encrypted.png";
+					return "/images/mascot-encrypted.png";
 				}
+			}
+		},
+		_computeProfile: function(data) {
+			if (data.profile !== null && data.profile !== undefined) {
+				return data.profile.profileImg;
 			}
 		},
 		_locationChange: function() {

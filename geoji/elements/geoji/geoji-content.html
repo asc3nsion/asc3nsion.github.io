@@ -49,21 +49,51 @@ This is an element button used as a base for other buttons.
 	}
 	paper-dialog.txtContent{
 	 	width: 35vw;
+	 	min-height: 250px;
 	 	height: 30%;
+	 	min-height: 250px;
 	}
 	paper-dialog.imgContent{
-	 	width: 35vw;
-	 	height: 55%;
-
+		max-height: 50%;
+      	min-height: 250px;
+	 	max-width: 30%;
+      	min-width: 200px;
+	}
+	img.imgContent{
+		height: 70%;
+	    width: 80%;
+	    margin-top: 10%;
+	    margin-left: 15%;
+	}
+	div.imgContent {
+		height: 20%;
+	    width: 60%;
+	    margin: 0 auto;
 	}
 	paper-dialog.vidContent{
-	 	width: 35vw;
-	 	height: 55%;
-
+	 	max-height: 70%;
+      	min-height: 250px;
+	 	max-width: 50%;
+      	min-width: 200px;
+	}
+	paper-dialog.profileContent{
+	 	width: 50vw;
+	 	height: 50%;
+	}
+	img.profileContent{
+		height: 65%;
+	    width: 65%;
+	    margin-top: 10%;
+	    margin-left: 15%;
+	}
+	div.profileInfo {
+		background-color: #F0F4C3;
+		height: 20%;
+	    width: 60%;
+	    margin: 0 auto;
 	}
 	paper-dialog.decryptData{
 	 	z-index: 1000;
-
 	}
 
 </style>	
@@ -92,7 +122,11 @@ This is an element button used as a base for other buttons.
 		</firebase-collection>
 
 		<paper-card id="{{assignCtrl('geojiMap')}}" heading="{{heading}}" image="{{cardImage}}" class="mainMap">
-		  <div class="topCorner"><paper-icon-button suffix class="closeDialog" icon="clear" on-tap="_closeMap" class="topCorner"></paper-icon-button></div>
+		  
+		  <div class="topCorner">
+		  	<paper-icon-button suffix icon="autorenew" on-tap="refresh"></paper-icon-button>
+		  	<paper-icon-button suffix class="closeDialog" icon="clear" on-tap="_closeMap" class="topCorner"></paper-icon-button>
+		  </div>
 		  <a id="{{assignCtrl('backLink')}}" data-route="home" href="/" hidden="true"></a>
 		  
 		  <div class="card-content floatRight"><h3>{{detail}}</h3></div>
@@ -111,9 +145,11 @@ This is an element button used as a base for other buttons.
 		  </google-map>
 
 		  <div class="card-actions">
-		    <paper-button on-tap="refresh">Refresh</paper-button>
-		    <div class="center">{{date}}</div>
+		    <div class="center">Start: {{date}}</div>
+		    <div class="center">End: {{end}}</div>
 		  </div>
+		  <div class="bottomRightCorner"><img id="{{assignCtrl('cardProfile')}}" src="{{profileImg}}" alt="profile" on-tap="openProfile" class="cardProfile bottomRightCorner"></div>
+
 		</paper-card>
 
 		<paper-dialog class="txtContent" id="{{assignCtrl('txtDialog')}}" modal role="alertdialog">
@@ -128,7 +164,7 @@ This is an element button used as a base for other buttons.
 			<div class="topCorner"><paper-icon-button suffix class="closeDialog" icon="clear" on-tap="_closeImg" class="topCorner"></paper-icon-button></div>
 			<h2>Image</h2>
 			<div id="{{assignCtrl('tempImgs')}}" >
-				<img id="{{assignCtrl('markerImg')}}" src="{{markerImg}}" vspace="50" class="mainMap"></img>
+				<img id="{{assignCtrl('markerImg')}}" src="{{markerImg}}" vspace="50" class="imgContent"></img>
 			</div>
 		</paper-dialog>
 
@@ -155,6 +191,15 @@ This is an element button used as a base for other buttons.
 			<paper-button id="{{assignCtrl('decryptBtn')}}" class="txtData theme" raised on-tap="_decryptGeoji">DECRYPT</paper-button>
 		</paper-dialog>
 
+		<paper-dialog class="profileContent" id="{{assignCtrl('profileDialog')}}" modal role="alertdialog">
+			<div class="topCorner"><paper-icon-button suffix class="closeDialog" icon="clear" on-tap="closeProfile" class="topCorner"></paper-icon-button></div>
+			<img id="{{assignCtrl('profileImg')}}" src="{{profileImg}}" vspace="50" class="profileContent"></img>
+			<h2 class="center">Created By: {{profileName}}</h2>
+			<!-- <div class="profileInfo">
+				<p>{{markerText}}</p>
+			</div> -->
+		</paper-dialog>
+
 	</template>
 </dom-module>
 
@@ -171,6 +216,14 @@ This is an element button used as a base for other buttons.
 				type: String,
 				value: ""
 			},
+			profileName: {
+				type: String,
+				value: "unknown"
+			},
+			profileImg: {
+				type: String,
+				value: "/images/mascot-unknown.png"
+			},
 			heading: {
 				type: String,
 				value: "GEOJI"
@@ -180,6 +233,9 @@ This is an element button used as a base for other buttons.
 				value: ""
 			},
 			date: {
+				type: String
+			},
+			end: {
 				type: String
 			},
 			description: {
@@ -267,6 +323,12 @@ This is an element button used as a base for other buttons.
 
 			}
 
+		},
+		openProfile: function(){
+			this.getElem(this.ctrls.profileDialog).open();
+		},
+		closeProfile: function(){
+			this.getElem(this.ctrls.profileDialog).close();	
 		},
 		loadMarker: function(long, lat, id) {
 
@@ -491,12 +553,23 @@ This is an element button used as a base for other buttons.
 				map.clear();
 				target = self.targetMarker(obj.target.longitude, obj.target.latitude, target.id);
 
+				if (obj.profile !== null && obj.profile !== undefined) {
+					this.profileImg = obj.profile.profileImg;
+					this.profileName = obj.profile.name;
+					console.log("WHAHAHAHAHAHAAH");
+					console.log(obj.profile.name);
+				}
+
 				if (obj.title !== null && obj.title !== undefined) {
 					this.heading = obj.title;
 				}
 
 				if (obj.date !== null && obj.date !== undefined) {
 					this.date = obj.date;
+				}
+
+				if (obj.end !== null && obj.end !== undefined) {
+					this.end = obj.end;
 				}
 
 
@@ -571,7 +644,12 @@ This is an element button used as a base for other buttons.
 					var emailInput = self.getElem(self.ctrls.emailInput);
 
 					self.private = obj.private;
+					self.profileName = obj.profile.name;
+					self.profileImg = obj.profile.profileImg;
 					self.date = obj.date;
+					self.end = obj.end;
+					console.log("WHAHAHAHAHAHAAH");
+					console.log(obj.profile.name);
 					map.clear();
 					target = self.targetMarker(obj.target.longitude, obj.target.latitude, target.id);
 
@@ -687,6 +765,12 @@ This is an element button used as a base for other buttons.
 							self.decrypt_MainObj(i + 1, this.cipherKey);
 						}
 						break;
+					case "profile":
+						if (self.encryptedObj.profile !== null && self.encryptedObj.profile !== undefined) {
+							self.decryptedObj.profile = self.encryptedObj.profile;
+							self.decrypt_MainObj(i + 1, this.cipherKey);
+						}
+						break;
 					case "target":
 						console.log("decrypt target");
 						if (self.encryptedObj.target !== null && self.encryptedObj.target !== undefined) {
@@ -709,6 +793,12 @@ This is an element button used as a base for other buttons.
 					case "date":
 						if (self.encryptedObj.date !== null && self.encryptedObj.date !== undefined) {
 							self.decryptedObj.date = self.encryptedObj.date;
+							self.decrypt_MainObj(i + 1, this.cipherKey);
+						}
+						break;
+					case "end":
+						if (self.encryptedObj.end !== null && self.encryptedObj.end !== undefined) {
+							self.decryptedObj.end = self.encryptedObj.end;
 							self.decrypt_MainObj(i + 1, this.cipherKey);
 						}
 						break;
@@ -750,7 +840,7 @@ This is an element button used as a base for other buttons.
 
 			decryptSpinner.active = true;
 
-			this.skipKeys = ["id", "type", "date", "target"];
+			this.skipKeys = ["id", "type", "date", "target", "profile"];
 
 			this.decrypt_MainObj(0, this.cipherKey);
 		},

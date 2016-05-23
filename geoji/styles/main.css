@@ -101,6 +101,14 @@ li.userDataInput{
   height: 25%;
 }
 
+.left3pct {
+  margin-left: 3%;
+}
+
+.right3pct {
+  margin-right: 3%;
+}
+
 .halfWidth {
   width: 48.6%;
 }
@@ -118,7 +126,7 @@ li.userDataInput{
 
 .inlineOneEighth {
   display: inline-block;
-  width: 22.5%;
+  width: 15.5%;
 }
 
 .inlineOneFourth {
@@ -150,6 +158,18 @@ li.userDataInput{
     position:absolute;
     top:0;
     right:0;
+}
+
+.bottomRightCorner{
+    position:absolute;
+    bottom:0;
+    right:0;
+}
+
+.bottomLeftCorner{
+    position:absolute;
+    bottom:0;
+    left:0;
 }
 
 .alignBottom{

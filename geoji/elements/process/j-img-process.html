@@ -30,6 +30,11 @@ fixedSize = it the size of the cropped square in pixels.
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 
+<link rel="import" href="../../behaviors/style/j-styles.html">
+<link rel="import" href="../../behaviors/interaction/j-handler.html">
+<link rel="import" href="../../behaviors/interaction/j-events.html">
+<link rel="import" href="../../behaviors/selection/auto-id.html">
+
 <script src="../../bower_components/caman/dist/caman.min.js"></script>
 
 <dom-module id="j-img-process">
@@ -541,6 +546,7 @@ fixedSize = it the size of the cropped square in pixels.
 
       },
       imgurUpload: function() {
+        console.log("imgur upload")
         var imgur = this.getElem(this.ctrls.imgurUpload);
 
         var file = this._createImgFile();
@@ -618,6 +624,8 @@ fixedSize = it the size of the cropped square in pixels.
         }
       },
       _createImgFile: function() {
+
+        console.log("createImgFile");
 
         var imgur = this.getElem(this.ctrls.imgurUpload);
         var self = this;
